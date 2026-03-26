@@ -19,7 +19,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
 @SpringBootTest
-@AutoConfigureMockMvc // virtual tomcat or stimulate Tomcat
+@AutoConfigureMockMvc
+// virtual tomcat or stimulate Tomcat
 @Transactional // it will rollback after running tests
 public class PublisherApiTest {
 
