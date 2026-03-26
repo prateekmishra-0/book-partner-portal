@@ -1,7 +1,6 @@
-package com.capgemini.book_partner_portal.publisherTest;
+package com.capgemini.book_partner_portal.repository;
 
 import com.capgemini.book_partner_portal.entity.Publisher;
-import com.capgemini.book_partner_portal.repository.PublisherRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
