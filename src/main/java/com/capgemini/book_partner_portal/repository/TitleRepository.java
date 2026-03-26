@@ -15,9 +15,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RepositoryRestResource
 public interface TitleRepository extends JpaRepository<Title, String> {
         
-        Optional<Title> findByTitle(@RequestParam("title")String title);
+        List<Title> findByTitleContainingIgnoreCase(@RequestParam("title")String title);
 
         List<Title> findByType(@RequestParam("type")String type);
 
+        Optional<Title> findByTitle(@RequestParam("title")String title);
   
 }

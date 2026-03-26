@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.time.LocalDateTime;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
-
+import static org.hamcrest.Matchers.hasSize;
 
 
 @SpringBootTest
@@ -32,6 +32,7 @@ class TitleApiTest {
     @Autowired
     private TitleRepository titleRepository;
 
+    // will work as prerequisite for all test cases
     @BeforeEach
     void initData() {
        Title book = new Title();
@@ -49,10 +50,21 @@ class TitleApiTest {
     void testFetchMasterBookList() throws Exception {
         
         mockMvc.perform(get("/api/titles"))
+        // will display list in console
         .andDo(print())
-        
+        // check is status is ok
         .andExpect(status().isOk())
         ;       
+    }
+
+    @Test
+    void testFetchMasterBookEmptyList() throws Exception {
+        titleRepository.deleteAll();
+        mockMvc.perform(get("/api/titles")
+                .accept("application/hal+json"))
+                .andExpect(status().isOk())
+                // Returns an empty HAL collection: { "_embedded": { "titles": [] } }
+                .andExpect(jsonPath("$._embedded.titles", hasSize(0)));
     }
 
     @Test
@@ -68,6 +80,15 @@ class TitleApiTest {
                 .andExpect(content().contentType("application/hal+json"));
     }
 
+     @Test
+    void testFindByTitle_Empty() throws Exception {
+        mockMvc.perform(get("/api/titles/search/findByTitle")
+                .param("title", "Harry Potter")
+                .accept("application/hal+json"))
+                .andExpect(status().isNotFound());
+                // Returns an empty HAL collection: { "_embedded": { "titles": [] } }
+    }
+
     @Test
     void testFindByType() throws Exception{ 
         mockMvc.perform(get("/api/titles/search/findByType")
@@ -80,5 +101,21 @@ class TitleApiTest {
                 // here if status is ok it will return hal+json
                 .andExpect(content().contentType("application/hal+json"));
     }
+
+    @Test
+    void testFindByType_Empty() throws Exception {
+                mockMvc.perform(get("/api/titles/search/findByType")
+                .param("type", "dancing")
+                .accept("application/hal+json"))
+                .andExpect(status().isOk())
+                // Returns an empty HAL collection: { "_embedded": { "titles": [] } }
+                .andExpect(jsonPath("$._embedded.titles", hasSize(0)));
+    }
+
+   
+
+    
+
+
 
 }

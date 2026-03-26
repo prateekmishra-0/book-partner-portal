@@ -46,16 +46,44 @@ class TitleRepositoryTest {
     }
 
     @Test
-    void testFindByTitle(){
+    void testFindBookEmptyList(){
+        titleRepository.deleteAll();
+        List<Title> list = titleRepository.findAll();
+        assertThat(list).isEmpty();
+    }
+
+    @Test
+    void testFindByExactTitle(){
         Optional<Title> list = titleRepository.findByTitle("The Busy Executive's Database Guide");
         assertThat(list).isNotEmpty();
+    }
+
+    @Test
+    void testFindBySimilarTitle(){
+        List<Title> list = titleRepository.findByTitleContainingIgnoreCase("The Busy");
+        assertThat(list).isNotEmpty();
+    }
+
+    @Test
+    void testFindByTitle_Empty(){
+        Optional<Title> list = titleRepository.findByTitle("Not an actual book");
+        assertThat(list).isEmpty(); 
     }
 
     @Test
     void testFindByType(){
         List<Title> list = titleRepository.findByType("business");
         assertThat(list).isNotEmpty();
-    }   
+    }
+
+    @Test
+    void testFindByType_Empty(){
+        List<Title> list = titleRepository.findByType("not an actual type");
+        assertThat(list).isEmpty();
+    }
+
+    
+       
 
     
     
