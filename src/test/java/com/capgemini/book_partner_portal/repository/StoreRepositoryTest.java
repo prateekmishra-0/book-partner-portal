@@ -39,21 +39,4 @@ public class StoreRepositoryTest {
         assertEquals("Eric the Read Books", results.get(0).getStorName());
         assertEquals("788 Catamaugus Ave.", results.get(0).getStorAddress());
     }
-
-    @Test
-    public void testFindByState_ShouldReturnStores() {
-        List<Store> results = storeRepository.findByState("CA");
-
-        // Just check that it's not empty and the first one is correct
-        assertFalse(results.isEmpty());
-        assertEquals("CA", results.get(0).getState());
-    }
-
-    @Test
-    public void testSearchByName_ShouldFindPartialMatch() {
-        List<Store> results = storeRepository.findByStorNameContaining("Barnum");
-
-        assertFalse(results.isEmpty());
-        assertEquals("Barnum's", results.get(0).getStorName());
-    }
 }

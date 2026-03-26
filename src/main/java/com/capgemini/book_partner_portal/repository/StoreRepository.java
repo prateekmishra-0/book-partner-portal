@@ -10,8 +10,6 @@ import java.util.List;
 @RepositoryRestResource(collectionResourceRel = "stores", path = "stores")
 public interface StoreRepository extends JpaRepository<Store,String> {
     List<Store> findByCity(@Param("city") String city);
-    List<Store> findByState(@Param("state") String state);
-    List<Store> findByStorNameContaining(@Param("name") String name);
-
+//    List<Store> findByState(@Param("state") String state);
 
 }
