@@ -31,7 +31,6 @@ public class PublisherApiTest {
     @Autowired
     private PublisherRepository publisherRepository;
 
-    @Transactional
     @BeforeEach
     void setUpTestPublisher() {
         testPublisher = Publisher.builder()
@@ -41,9 +40,8 @@ public class PublisherApiTest {
                 .state("MH")
                 .country("India").build();
 
-       publisherRepository.save(testPublisher);
+        publisherRepository.save(testPublisher);
     }
-
 
 
     @Test
@@ -52,18 +50,50 @@ public class PublisherApiTest {
                 .andDo(print())
                 .andExpect(content().contentType("application/hal+json"))
                 .andExpect(jsonPath("$._embedded.publishers").exists());
-
     }
 
+    // success when name of publisher is there
+    @Test
+    void shouldReturnPublisherByName() throws Exception {
+        mockMvc.perform(get("/api/publishers/search/pubname") // Added /search/
+                        .param("pubName", testPublisher.getPubName()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/hal+json"))
+                // If Optional<Publisher> returns the object directly:
+                .andExpect(jsonPath("$.pubName").value(testPublisher.getPubName()));
+    }
+
+    // not found because the name not present in publisher
+    @Test
+    void shouldReturnNotFoundByName() throws Exception {
+        mockMvc.perform(get("/api/publishers/pubname").param("pubName", "random"))
+                .andExpect(status().isNotFound())
+                .andDo(print());
+    }
+
+
+
+    // searching by city
     @Test
     void shouldReturnPublisherListByCity() throws Exception {
         mockMvc.perform(get("/api/publishers/search/city?city=nagpur"))
                 .andDo(print())
                 .andExpect(content().contentType("application/hal+json"))
                 .andExpect((jsonPath("$._embedded.publishers").exists()))
-                .andExpect(jsonPath("$._embedded.publishers[0].city").value("nagpur"))
-                .andExpect(jsonPath("$._embedded.publishers[0].state").value("MH"))
-                .andExpect(jsonPath("$._embedded.publishers[0].pubName").value("sujal nimje"))
-                .andExpect(jsonPath("$._embedded.publishers[0].country").value("India"));
+                .andExpect(jsonPath("$._embedded.publishers[0].city").value(testPublisher.getCity()))
+                .andExpect(jsonPath("$._embedded.publishers[0].state").value(testPublisher.getState()))
+                .andExpect(jsonPath("$._embedded.publishers[0].pubName").value(testPublisher.getPubName()))
+                .andExpect(jsonPath("$._embedded.publishers[0].country").value(testPublisher.getCountry()));
+    }
+
+    // city does not exists
+    @Test
+    void shouldReturnPublisherListByCityEmpty() throws Exception {
+        mockMvc.perform(get("/api/publishers/search/city?city=pune"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/hal+json"))
+                .andExpect(jsonPath("$._embedded.publishers").isEmpty());
     }
 }
