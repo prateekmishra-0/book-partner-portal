@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Entity
@@ -11,9 +13,12 @@ import lombok.Data;
 @Data
 public class Store {
     @Id
+    @NotNull(message = "Store ID is required")
+    @Size(min = 4, max = 4)
     @Column(name = "stor_id", length = 4, columnDefinition = "char(4)")
     private String storId;
 
+    @Size(max = 40)
     @Column(name = "stor_name", length = 40)
     private String storName;
 
@@ -23,9 +28,11 @@ public class Store {
     @Column(name = "city", length = 20)
     private String city;
 
+    @Size(max = 2)
     @Column(name = "state", length = 2, columnDefinition = "char(2)")
     private String state;
 
+    @Size(max = 5)
     @Column(name = "zip", length = 5, columnDefinition = "char(5)")
     private String zip;
 }
