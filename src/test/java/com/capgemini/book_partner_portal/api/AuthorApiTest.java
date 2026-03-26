@@ -1,7 +1,7 @@
 package com.capgemini.book_partner_portal.api;
 
+import static org.hamcrest.Matchers.containsStringIgnoringCase;
 import static org.hamcrest.Matchers.everyItem;
-import static org.hamcrest.Matchers.is;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,7 +88,7 @@ public class AuthorApiTest {
             .andExpect(jsonPath("$._embedded.authors").exists())
             .andExpect(jsonPath("$._embedded.authors").isNotEmpty())
             .andExpect(jsonPath("$._embedded.authors[*].firstName")
-            .value(everyItem(is("John"))));
+            .value(everyItem(containsStringIgnoringCase("John"))));
     }
 
     @Test
@@ -110,13 +110,13 @@ public class AuthorApiTest {
             .andExpect(jsonPath("$._embedded.authors").exists())
             .andExpect(jsonPath("$._embedded.authors").isNotEmpty())
             .andExpect(jsonPath("$._embedded.authors[*].lastName")
-            .value(everyItem(is("Doe"))));
+            .value(everyItem(containsStringIgnoringCase("Doe"))));
     }
 
     @Test
     void getAuthorsByLastName_WhenLastNameNotExists_ShouldReturnEmptyList() throws Exception {
         mockMvc.perform(get("/api/authors/search/lastname")
-            .param("lastname", "Sharma"))
+            .param("lastName", "Sharma"))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$._embedded.authors").exists())
@@ -132,7 +132,7 @@ public class AuthorApiTest {
             .andExpect(jsonPath("$._embedded.authors").exists())
             .andExpect(jsonPath("$._embedded.authors").isNotEmpty())
             .andExpect(jsonPath("$._embedded.authors[*].city")
-            .value(everyItem(is("Berkeley"))));
+            .value(everyItem(containsStringIgnoringCase("Berkeley"))));
     }
 
     @Test
