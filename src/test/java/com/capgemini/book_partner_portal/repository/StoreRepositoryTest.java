@@ -1,7 +1,6 @@
-package com.capgemini.book_partner_portal;
+package com.capgemini.book_partner_portal.repository;
 
 import com.capgemini.book_partner_portal.entity.Store;
-import com.capgemini.book_partner_portal.repository.StoreRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
