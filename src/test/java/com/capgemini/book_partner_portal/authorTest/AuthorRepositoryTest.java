@@ -22,9 +22,36 @@ public class AuthorRepositoryTest {
     private AuthorRepository authorRepository;
 
     @Test
-    public void testGetAllAuthors(){
+    void testGetAllAuthors(){
         List<Author> authors = authorRepository.findAll();
         assertThat(authors).isNotEmpty(); 
+    }
+
+    @Test
+    void testGetAuthorByValidId() {
+        Author testAuthor = new Author(
+            "123-45-6789",
+            "Doe",
+            "John",
+            "1234567890",
+            "Street 1",
+            "NYC",
+            "NY",
+            "10001",
+            1
+        );
+
+        authorRepository.save(testAuthor);
+
+        Author author = authorRepository.findById("123-45-6789").orElse(null);
+
+        assertThat(author).isNotNull();
+    }
+    
+    @Test
+    void testGetAuthorByInvalidId(){
+        Author author = authorRepository.findById("999-99-9999").orElse(null);
+        assertThat(author).isNull();
     }
     
 }
