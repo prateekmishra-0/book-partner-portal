@@ -1,5 +1,8 @@
 package com.capgemini.book_partner_portal.api;
 
+import static org.hamcrest.Matchers.containsStringIgnoringCase;
+import static org.hamcrest.Matchers.everyItem;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -23,54 +26,126 @@ public class AuthorApiTest {
     
     @Autowired
     private MockMvc mockMvc;
+
     @Autowired
     private AuthorRepository authorRepository;
-    
-    // Get all authors
-    @Test
-    void testGetAllAuthorsAPI() throws Exception {
 
-    mockMvc.perform(get("/api/authors"))
-        .andDo(print())
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$._embedded.authors").isNotEmpty());
-    }
-    
+    private Author testAuthor;
 
-    // Get author with valid id
-    @Test
-    void testGetAuthorByValidIdAPI() throws Exception {
-
-        // Arrange: create data in DB
-        Author author = new Author(
-            "123-45-6789",
-            "Doe",
-            "John",
-            "1234567890",
-            "Street 1",
-            "NYC",
-            "NY",
-            "10001",
+    @BeforeEach
+    void setup() {
+        testAuthor = new Author(
+            "123-45-6789", 
+            "Doe", 
+            "John", 
+            "415 658-9932", 
+            "6223 Bateman St.", 
+            "Berkeley", 
+            "CA", 
+            "94705", 
             1
         );
 
-        authorRepository.save(author);
-
-        mockMvc.perform(get("/api/authors/123-45-6789"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.firstName").value("John"))
-                .andExpect(jsonPath("$.lastName").value("Doe"));
+        authorRepository.save(testAuthor);
     }
 
-    // Get author with invalid id
+
+
+    // ---------------------------------- GET APIs ----------------------------------------------
+
     @Test
-    void testGetAuthorByInvalidIdAPI() throws Exception {
-
-        // Attempt to get an ID that does NOT exist
-        mockMvc.perform(get("/api/authors/999-99-9999"))
-                .andDo(print())
-                .andExpect(status().isNotFound());
+    void getAllAuthors_WhenAuthorsExist_ShouldReturnNonEmptyList() throws Exception {
+        mockMvc.perform(get("/api/authors"))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$._embedded.authors").isNotEmpty());
     }
+
+    @Test
+    void getAuthorById_WithValidId_ShouldReturn200() throws Exception {
+        mockMvc.perform(get("/api/authors/123-45-6789"))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.firstName").value("John"))
+            .andExpect(jsonPath("$.lastName").value("Doe"));
+    }
+
+    @Test
+    void getAuthorById_WithInvalidId_ShouldReturn404() throws Exception {
+        mockMvc.perform(get("/api/authors/999-99-9999"))
+            .andDo(print())
+            .andExpect(status().isNotFound());
+    }
+
+
+
+    @Test
+    void getAuthorsByFirstName_WhenFirstNameExists_ShouldReturnNonEmptyList() throws Exception {
+        mockMvc.perform(get("/api/authors/search/firstname")
+            .param("firstName", "John"))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$._embedded.authors").exists())
+            .andExpect(jsonPath("$._embedded.authors").isNotEmpty())
+            .andExpect(jsonPath("$._embedded.authors[*].firstName")
+            .value(everyItem(containsStringIgnoringCase("John"))));
+    }
+
+    @Test
+    void getAuthorsByFirstName_WhenFirstNameNotExists_ShouldReturnEmptyList() throws Exception {
+        mockMvc.perform(get("/api/authors/search/firstname")
+            .param("firstName", "Ramu"))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$._embedded.authors").exists())
+            .andExpect(jsonPath("$._embedded.authors").isEmpty());
+    }
+
+    @Test
+    void getAuthorsByLastName_WhenLastNameExists_ShouldReturnNonEmptyList() throws Exception {
+        mockMvc.perform(get("/api/authors/search/lastname")
+            .param("lastName", "Doe"))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$._embedded.authors").exists())
+            .andExpect(jsonPath("$._embedded.authors").isNotEmpty())
+            .andExpect(jsonPath("$._embedded.authors[*].lastName")
+            .value(everyItem(containsStringIgnoringCase("Doe"))));
+    }
+
+    @Test
+    void getAuthorsByLastName_WhenLastNameNotExists_ShouldReturnEmptyList() throws Exception {
+        mockMvc.perform(get("/api/authors/search/lastname")
+            .param("lastName", "Sharma"))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$._embedded.authors").exists())
+            .andExpect(jsonPath("$._embedded.authors").isEmpty());
+    }
+
+    @Test
+    void getAuthorsByCity_WhenCityExists_ShouldReturnNonEmptyList() throws Exception {
+        mockMvc.perform(get("/api/authors/search/city")
+            .param("city", "Berkeley"))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$._embedded.authors").exists())
+            .andExpect(jsonPath("$._embedded.authors").isNotEmpty())
+            .andExpect(jsonPath("$._embedded.authors[*].city")
+            .value(everyItem(containsStringIgnoringCase("Berkeley"))));
+    }
+
+    @Test
+    void getAuthorsByCity_WhenCityNotExists_ShouldReturnEmptyList() throws Exception {
+        mockMvc.perform(get("/api/authors/search/city")
+            .param("city", "Gondia"))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$._embedded.authors").exists())
+            .andExpect(jsonPath("$._embedded.authors").isEmpty());
+    }
+
+
+
 
 }
