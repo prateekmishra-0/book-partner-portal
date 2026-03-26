@@ -78,5 +78,42 @@ public class PublisherRepositoryTest {
         Assertions.assertTrue(optionalPublisher.isEmpty());
     }
 
+    @Test
+    void shouldReturnPublisherListByCity() {
+        String city = testPublisher.getCity();
+
+        List<Publisher> publishers = publisherRepository.findByCityIgnoreCase(city);
+        assertThat(publishers).isNotEmpty();
+        Assertions.assertEquals(testPublisher.getCity(), publishers.get(0).getCity());
+    }
+
+    @Test
+    void shouldReturnPublisherListByCityNotFound() {
+        String city = "random";
+
+        List<Publisher> publishers = publisherRepository.findByCityIgnoreCase(city.toLowerCase());
+
+        Assertions.assertEquals(0, publishers.size());
+    }
+
+
+    @Test
+    void shouldReturnPublisherListByState() {
+        String state = testPublisher.getState();
+
+        List<Publisher> publishers = publisherRepository.findByStateIgnoreCase(state.toLowerCase());
+        assertThat(publishers).isNotEmpty();
+        Assertions.assertEquals(testPublisher.getState(), publishers.get(0).getState());
+    }
+
+    @Test
+    void shouldReturnPublisherListByStateNotFound() {
+        String state = "random";
+
+        List<Publisher> publishers = publisherRepository.findByCityIgnoreCase(state);
+
+        Assertions.assertEquals(0, publishers.size());
+    }
+
 
 }
