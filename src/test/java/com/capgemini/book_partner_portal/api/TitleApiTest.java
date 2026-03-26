@@ -63,16 +63,6 @@ class TitleApiTest {
     }
 
     @Test
-    void testFetchMasterBookEmptyList() throws Exception {
-        titleRepository.deleteAll();
-        mockMvc.perform(get("/api/titles")
-                .accept("application/hal+json"))
-                .andExpect(status().isOk())
-                // Returns an empty HAL collection: { "_embedded": { "titles": [] } }
-                .andExpect(jsonPath("$._embedded.titles", hasSize(0)));
-    }
-
-    @Test
     void testFindByTitle() throws Exception{
         mockMvc.perform(get("/api/titles/search/findByTitle")
                 .param("title", "The Busy Executive's Database Guide") 

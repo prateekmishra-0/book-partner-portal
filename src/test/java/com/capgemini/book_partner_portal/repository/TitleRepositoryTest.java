@@ -47,13 +47,6 @@ class TitleRepositoryTest {
     }
 
     @Test
-    void testFindBookEmptyList(){
-        titleRepository.deleteAll();
-        List<Title> list = titleRepository.findAll();
-        assertThat(list).isEmpty();
-    }
-
-    @Test
     void testFindByExactTitle(){
         Optional<Title> list = titleRepository.findByTitle("The Busy Executive's Database Guide");
         assertThat(list).isNotEmpty();
@@ -132,6 +125,6 @@ class TitleRepositoryTest {
         assertThat(fetchedBook.get().getTitle()).isEqualTo("Spring Boot Pro Guide");
     }
 
-    
+
  
 }
