@@ -1,4 +1,4 @@
-package com.capgemini.book_partner_portal.TitleTesting;
+package com.capgemini.book_partner_portal.repository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
