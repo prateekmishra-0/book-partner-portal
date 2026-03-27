@@ -17,6 +17,7 @@ create table authors (
                          state char(2) null,
                          zip char(5) null,
                          contract int not null,
+                         is_active boolean not null default true,
                          check  (au_id REGEXP '^[0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]$'),
  check (zip REGEXP '^[0-9][0-9][0-9][0-9][0-9]$'),
   constraint UPKCL_auidind
@@ -31,6 +32,7 @@ create table publishers (
                             city varchar(20) null,
                             state char(2) null,
                             country varchar(30) null default 'USA',
+                            is_active boolean not null default true,
                             constraint UPKCL_pubind
                                 primary key (pub_id),
                             check ((
@@ -53,6 +55,7 @@ create table titles (
                         ytd_sales int null,
                         notes varchar(200) null,
                         pubdate DATETIME NOT NULL,
+                        is_active boolean not null default true,
                         constraint UPKCL_titleidind
                             primary key (title_id),
                         foreign key (pub_id)
@@ -81,6 +84,7 @@ create table stores (
                         city varchar(20) null,
                         state char(2) null,
                         zip char(5) null,
+                        is_active boolean not null default true,
                         constraint UPK_storeid
                             primary key (stor_id)
 );
@@ -144,6 +148,7 @@ create table employee (
                           job_lvl int default 10,
                           pub_id char(4) not null default '9952',
                           hire_date timestamp not null default current_timestamp(),
+                          is_active boolean not null default true,
                           constraint PK_emp_id
                               primary key (emp_id),
                           constraint CK_emp_id

@@ -25,7 +25,7 @@ public class EmployeeEntityTest {
     // Test 1
     @Test
     public void testValidEmployeeId_ShouldPassValidation() {
-        Employee emp = new Employee("PTC11962M", "Prateek", "Mishra", LocalDate.now(), "PUB-1", 3);
+        Employee emp = new Employee("PTC11962M", "Prateek", "Mishra", LocalDate.now(), "PUB-1", 3,true);
         Set<ConstraintViolation<Employee>> violations = validator.validate(emp);
         assertThat(violations).isEmpty(); // No errors expected
     }
@@ -33,7 +33,7 @@ public class EmployeeEntityTest {
     // Test 2
     @Test
     public void testInvalidEmployeeId_ShouldFailRegexValidation() {
-        Employee emp = new Employee("12345", "Prateek", "Mishra", LocalDate.now(), "PUB-1", 3);
+        Employee emp = new Employee("12345", "Prateek", "Mishra", LocalDate.now(), "PUB-1", 3, true);
         Set<ConstraintViolation<Employee>> violations = validator.validate(emp);
 
         assertThat(violations).isNotEmpty();
@@ -45,7 +45,7 @@ public class EmployeeEntityTest {
     // Test 3
     @Test
     public void testMissingMandatoryFields_ShouldFailValidation() {
-        Employee emp = new Employee("PTC11962M", null, "", LocalDate.now(), "PUB-1", null);
+        Employee emp = new Employee("PTC11962M", null, "", LocalDate.now(), "PUB-1", null, true);
         Set<ConstraintViolation<Employee>> violations = validator.validate(emp);
 
         assertThat(violations).isNotEmpty();
