@@ -19,6 +19,7 @@ import jakarta.transaction.Transactional;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -61,7 +62,7 @@ class TitleApiTest {
         book.setPrice(19.99);
         book.setRoyalty(10);
         book.setPubdate(LocalDateTime.now());
-        book.setActive(true);
+        book.setIsActive(true);
         titleRepository.save(book);
     }
 
@@ -174,5 +175,38 @@ class TitleApiTest {
         // 2. Try to Get - Should be 404 because @Where(is_active=true) filters it out
         mockMvc.perform(get("/api/titles/" + id))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Security: Prevent Duplicate ID (409 Conflict)")
+    void testCreateDuplicateTitle_ShouldFail() throws Exception {
+        // "BU1332" already exists from @BeforeEach
+        String duplicateJson = "{" +
+                "\"titleId\": \"BU1332\"," +
+                "\"title\": \"Hacker Book\"," +
+                "\"publisher\": \"/api/publishers/1389\"," +
+                "\"active\": true" +
+                "}";
+
+        mockMvc.perform(post("/api/titles")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(duplicateJson))
+                .andExpect(status().isConflict()); // Validates TitleEventHandler bouncer
+    }
+
+    @Test
+    @DisplayName("Security: Prevent Phantom Insert via PUT (404 Not Found)")
+    void testPutNewTitle_ShouldFail() throws Exception {
+        String nonExistentId = "NEW999";
+        String phantomJson = "{" +
+                "\"titleId\": \"" + nonExistentId + "\"," +
+                "\"title\": \"Phantom Book\"," +
+                "\"publisher\": \"/api/publishers/1389\"" +
+                "}";
+
+        mockMvc.perform(put("/api/titles/" + nonExistentId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(phantomJson))
+                .andExpect(status().isNotFound()); 
     }
 }
