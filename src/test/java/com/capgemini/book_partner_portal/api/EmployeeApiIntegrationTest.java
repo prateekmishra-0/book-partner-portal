@@ -4,15 +4,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import org.springframework.http.MediaType;
 
 @SpringBootTest
 @Transactional
@@ -37,14 +38,231 @@ public class EmployeeApiIntegrationTest {
 
                 // STRICT VERIFICATION: Ensure public fields exist for EVERY object in the array
                 // The [*] wildcard creates a list of all values. .isNotEmpty() ensures the list has data.
-                .andExpect(jsonPath("$._embedded.employees[*].empId").isNotEmpty())
                 .andExpect(jsonPath("$._embedded.employees[*].fname").isNotEmpty())
                 .andExpect(jsonPath("$._embedded.employees[*].lname").isNotEmpty())
                 .andExpect(jsonPath("$._embedded.employees[*].jobLvl").isNotEmpty())
 
                 // CRUCIAL LEAK CHECK: Ensure hidden fields do NOT exist on ANY object in the array
                 // If even one employee has a hireDate or pubId, this will fail.
+                .andExpect(jsonPath("$._embedded.employees[*].empId").doesNotExist())
                 .andExpect(jsonPath("$._embedded.employees[*].hireDate").doesNotExist())
                 .andExpect(jsonPath("$._embedded.employees[*].pubId").doesNotExist());
     }
+
+    @Test
+    public void testGetEmployees_WithPagination_ShouldReturnPaginatedList() throws Exception {
+        // Goal: Call GET /api/employees with pagination parameters
+        // Assert exactly 5 records are returned
+        // Assert the Spring Data REST pagination metadata matches our exact database count
+
+        mockMvc.perform(get("/api/employees?page=0&size=5"))
+                .andExpect(status().isOk())
+
+                // 1. Verify the array exists
+                .andExpect(jsonPath("$._embedded.employees").exists())
+
+                // 2. Verify exactly 5 items were returned in the array
+                .andExpect(jsonPath("$._embedded.employees.length()", is(5)))
+
+                // 3. Verify the pagination metadata at the bottom of the JSON
+                .andExpect(jsonPath("$.page.size", is(5)))
+                .andExpect(jsonPath("$.page.totalElements", is(43)))
+                .andExpect(jsonPath("$.page.totalPages", is(9)))
+                .andExpect(jsonPath("$.page.number", is(0))); // Page numbers are 0-indexed
+    }
+
+    @Test
+    public void testGetEmployees_LastPage_ShouldReturnRemainingElements() throws Exception {
+        // 43 total elements, size 5. Pages 0-7 will have 5 elements.
+        // Page 8 (the 9th page) should have exactly 3 elements left.
+
+        mockMvc.perform(get("/api/employees?page=8&size=5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.employees.length()", is(3))) // The leftovers!
+                .andExpect(jsonPath("$.page.number", is(8)));
+    }
+
+    @Test
+    public void testGetEmployeeById_WhenValidId_ShouldReturnEmployeeDetails() throws Exception {
+        // Goal: Call GET /api/employees/{id} with a known valid ID.
+        // Assert HTTP 200.
+        // Assert the returned JSON correctly matches the specific employee.
+
+        // PTC11962M is Philip Cramer from your insertdata.sql script
+        mockMvc.perform(get("/api/employees/PTC11962M"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fname", is("Philip")))
+                .andExpect(jsonPath("$.lname", is("Cramer")))
+                .andExpect(jsonPath("$.empId").doesNotExist())
+                .andExpect(jsonPath("$._links.self.href", endsWith("/api/employees/PTC11962M")));
+    }
+
+    @Test
+    public void testGetEmployeeById_WhenInvalidId_ShouldReturn404() throws Exception {
+        // Goal: Call GET /api/employees/{id} with a totally fake ID.
+        // Assert HTTP 404 Not Found to prove the API fails gracefully.
+
+        mockMvc.perform(get("/api/employees/FAKE999M"))
+                .andExpect(status().isNotFound());
+    }
+
+    // --- 1. First Name Search API Tests ---
+    @Test
+    public void testSearchByFnameApi_WhenValid_ShouldReturnResults() throws Exception {
+        // Search for "phil" (Philip Cramer from insertdata.sql)
+        mockMvc.perform(get("/api/employees/search/fname")
+                        .param("fname", "phil"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.employees").exists())
+                .andExpect(jsonPath("$._embedded.employees[*].fname", hasItem("Philip")));
+    }
+
+    @Test
+    public void testSearchByFnameApi_WhenInvalid_ShouldReturnEmpty() throws Exception {
+        mockMvc.perform(get("/api/employees/search/fname")
+                        .param("fname", "Zack"))
+                .andExpect(status().isOk())
+                // FIXED: Check that the array is empty [], not non-existent
+                .andExpect(jsonPath("$._embedded.employees").isEmpty());
+    }
+
+    // --- 2. Last Name Search API Tests ---
+    @Test
+    public void testSearchByLnameApi_WhenValid_ShouldReturnResults() throws Exception {
+        // Search for "cram" (Philip Cramer from insertdata.sql)
+        mockMvc.perform(get("/api/employees/search/lname")
+                        .param("lname", "cram"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.employees").exists())
+                .andExpect(jsonPath("$._embedded.employees[*].lname", hasItem("Cramer")));
+    }
+
+    @Test
+    public void testSearchByLnameApi_WhenInvalid_ShouldReturnEmpty() throws Exception {
+        mockMvc.perform(get("/api/employees/search/lname")
+                        .param("lname", "Zebra"))
+                .andExpect(status().isOk())
+                // FIXED: .isEmpty()
+                .andExpect(jsonPath("$._embedded.employees").isEmpty());
+    }
+
+    // --- 3. Job Level Greater Than API Tests ---
+    @Test
+    public void testSearchByJobLvlGtApi_WhenValid_ShouldReturnResults() throws Exception {
+        mockMvc.perform(get("/api/employees/search/joblevel-gt")
+                        .param("level", "200"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.employees").exists())
+                .andExpect(jsonPath("$._embedded.employees[*].jobLvl", everyItem(greaterThan(200))));
+    }
+
+    @Test
+    public void testSearchByJobLvlGtApi_WhenInvalid_ShouldReturnEmpty() throws Exception {
+        mockMvc.perform(get("/api/employees/search/joblevel-gt")
+                        .param("level", "250"))
+                .andExpect(status().isOk())
+                // FIXED: .isEmpty()
+                .andExpect(jsonPath("$._embedded.employees").isEmpty());
+    }
+
+    // --- 4. Job Level Less Than API Tests ---
+    @Test
+    public void testSearchByJobLvlLtApi_WhenValid_ShouldReturnResults() throws Exception {
+        mockMvc.perform(get("/api/employees/search/joblevel-lt")
+                        .param("level", "50"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.employees").exists())
+                .andExpect(jsonPath("$._embedded.employees[*].jobLvl", everyItem(lessThan(50))));
+    }
+
+    @Test
+    public void testSearchByJobLvlLtApi_WhenInvalid_ShouldReturnEmpty() throws Exception {
+        mockMvc.perform(get("/api/employees/search/joblevel-lt")
+                        .param("level", "5"))
+                .andExpect(status().isOk())
+                // FIXED: .isEmpty()
+                .andExpect(jsonPath("$._embedded.employees").isEmpty());
+    }
+
+    // --- 1. POST: The Full Form Test ---
+    @Test
+    public void testAddEmployee_WithAllFields_ShouldReturnCreated() throws Exception {
+        String newEmployeeJson = """
+                {
+                    "empId": "ZZZ99999M",
+                    "fname": "Full",
+                    "lname": "Tester",
+                    "jobLvl": 200,
+                    "pubId": "1389",
+                    "hireDate": "2026-03-26"
+                }
+                """;
+
+        mockMvc.perform(post("/api/employees")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(newEmployeeJson))
+                .andExpect(status().isCreated())
+                // FIXED: Check HATEOAS link instead of raw ID
+                .andExpect(jsonPath("$._links.self.href", endsWith("/api/employees/ZZZ99999M")))
+                .andExpect(jsonPath("$.pubId", is("1389")));
+    }
+
+    // --- 2. POST: The Partial Form Test (Defaults) ---
+    @Test
+    public void testAddEmployee_WithOnlyMandatoryFields_ShouldReturnCreated() throws Exception {
+        String newEmployeeJson = """
+                {
+                    "empId": "YYY88888F",
+                    "fname": "Partial",
+                    "lname": "Tester",
+                    "jobLvl": 150
+                }
+                """;
+
+        mockMvc.perform(post("/api/employees")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(newEmployeeJson))
+                .andExpect(status().isCreated())
+                // FIXED: Check HATEOAS link instead of raw ID
+                .andExpect(jsonPath("$._links.self.href", endsWith("/api/employees/YYY88888F")))
+                .andExpect(jsonPath("$.fname", is("Partial")));
+    }
+
+    // --- 3. POST: The Validation Failure Test ---
+    @Test
+    public void testAddEmployee_WithInvalidId_ShouldReturnBadRequest() throws Exception {
+        String badEmployeeJson = """
+                {
+                    "empId": "INVALID123",
+                    "fname": "Hacker",
+                    "lname": "Tester",
+                    "jobLvl": 100
+                }
+                """;
+
+        mockMvc.perform(post("/api/employees")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(badEmployeeJson))
+                .andExpect(status().isBadRequest()); // Expecting 400 Bad Request
+    }
+
+    // --- 4. POST: The Missing Mandatory Fields Test ---
+    @Test
+    public void testAddEmployee_WithMissingMandatoryFields_ShouldReturnBadRequest() throws Exception {
+        // Goal: User tries to submit the form without a First Name and without a Job Level.
+        // The @NotBlank on fname and @NotNull on jobLvl must catch this.
+        String incompleteEmployeeJson = """
+                {
+                    "empId": "ZZZ11111M",
+                    "fname": "", 
+                    "lname": "Tester"
+                }
+                """;
+
+        mockMvc.perform(post("/api/employees")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(incompleteEmployeeJson))
+                .andExpect(status().isBadRequest()); // Expecting 400 Bad Request
+    }
+
 }
