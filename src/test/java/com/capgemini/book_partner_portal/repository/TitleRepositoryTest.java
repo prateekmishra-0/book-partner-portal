@@ -129,13 +129,26 @@ class TitleRepositoryTest {
 
     // --- Numeric Comparison (The Employee Style) ---
     @Test
+    @DisplayName("Repo: Price Comparison with Full Database")
     void testPriceComparison_Logic() {
-        assertThat(titleRepository.findByPriceGreaterThan(15.00)).isNotEmpty();
-        assertThat(titleRepository.findByPriceLessThan(10.00)).isEmpty();
+        // 1. Test Greater Than (15.00)
+        // Our book "BU1332" is 19.99, so it MUST be in this list
+        List<Title> greaterThan = titleRepository.findByPriceGreaterThan(15.00);
+        assertThat(greaterThan).isNotEmpty();
+        assertThat(greaterThan).anyMatch(t -> t.getTitleId().equals("BU1332"));
 
-        List<Title> results = titleRepository.findByPriceBetween(15.00, 25.00);
-        assertThat(results).hasSize(1);
-        assertThat(results.get(0).getPrice()).isEqualTo(19.99);
+        // 2. Test Less Than (10.00)
+        // In a full DB, there might be cheap books (e.g. 2.99). 
+        // So we don't check for .isEmpty(). We check that OUR book is NOT there.
+        List<Title> lessThan = titleRepository.findByPriceLessThan(10.00);
+        assertThat(lessThan).noneMatch(t -> t.getTitleId().equals("BU1332"));
+
+        // 3. Test Between (18.00 and 22.00)
+        // In full DB, there might be 5 books in this range. 
+        // We verify the list is not empty and contains our book.
+        List<Title> results = titleRepository.findByPriceBetween(18.00, 22.00);
+        assertThat(results).isNotEmpty();
+        assertThat(results).anyMatch(t -> t.getTitleId().equals("BU1332") && t.getPrice() == 19.99);
     }
 
     // --- Soft Delete Test ---
