@@ -247,7 +247,6 @@ public class PublisherRepositoryTest {
     }
 
 
-
     @Test
     void shouldThrowErrorWhileSavingPublisherStateConstraintVoileted() {
         // ID "0000" does not match the regex ^(1389|0736|0877|1622|1756|99\d{2})$
@@ -265,6 +264,76 @@ public class PublisherRepositoryTest {
         });
     }
 
+    /**
+     * TEST: Ensure default value is applied
+     * Verifies that when a Publisher is saved without a country,
+     * it defaults to "USA".
+     */
+    @Test
+    void shouldApplyDefaultCountryWhenNotProvided() {
+        Publisher publisher = Publisher.builder()
+                .pubId("1622") // Valid ID from regex
+                .pubName("Default Test Pub")
+                .state("NY")
+                .build(); // country is not set
 
+        Publisher saved = publisherRepository.save(publisher);
 
+        Assertions.assertEquals("USA", saved.getCountry(), "Country should default to USA");
+    }
+
+    /**
+     * TEST: Verify partial update logic
+     * Simulates the behavior of a PATCH request by retrieving,
+     * modifying one field, and re-saving.
+     */
+    @Test
+    void shouldOnlyUpdateProvidedField() {
+        // 1. Get existing publisher from @BeforeEach (testPublisher)
+        String originalCity = testPublisher.getCity();
+        String newName = "New Updated Name";
+
+        // 2. Perform partial change
+        testPublisher.setPubName(newName);
+        publisherRepository.save(testPublisher);
+
+        // 3. Verify
+        Publisher updated = publisherRepository.findById(testPublisher.getPubId()).get();
+        Assertions.assertEquals(newName, updated.getPubName());
+        Assertions.assertEquals(originalCity, updated.getCity(), "City should remain unchanged");
+    }
+
+    /**
+     * TEST: Invalid ID pattern (Constraint Violation)
+     * Checks that an ID like '1234' (which fails the regex) triggers an exception.
+     */
+    @Test
+    void shouldThrowExceptionWhenIdFormatIsInvalid() {
+        Publisher invalidIdPub = Publisher.builder()
+                .pubId("1234") // Valid length (4), but not in the approved regex list
+                .pubName("Invalid ID Pub")
+                .state("CA")
+                .build();
+
+        assertThrows(ConstraintViolationException.class, () -> {
+            publisherRepository.saveAndFlush(invalidIdPub);
+        });
+    }
+
+    /**
+     * TEST: @NotBlank constraint
+     * Verifies that the repository won't allow saving a publisher without a name.
+     */
+    @Test
+    void shouldThrowExceptionWhenNameIsBlank() {
+        Publisher noNamePub = Publisher.builder()
+                .pubId("9988")
+                .pubName("") // Blank name
+                .state("TX")
+                .build();
+
+        assertThrows(ConstraintViolationException.class, () -> {
+            publisherRepository.saveAndFlush(noNamePub);
+        });
+    }
 }

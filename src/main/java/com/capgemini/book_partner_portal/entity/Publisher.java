@@ -38,6 +38,7 @@ public class Publisher {
     @Size(min = 2, max = 2, message = "state code must be 2 characters")
     private String state;
 
+    @Builder.Default
     @Column(name = "country", length = 30)
     private String country = "USA";
 }

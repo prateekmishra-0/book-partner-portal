@@ -18,6 +18,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // For print() - optional but very helpful for debugging
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
+import org.springframework.http.MediaType;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.HashMap;
+import java.util.Map;
+
 @SpringBootTest
 @AutoConfigureMockMvc // virtual tomcat or stimulate Tomcat
 @Transactional // it will rollback after running tests
@@ -30,6 +37,10 @@ public class PublisherApiTest {
 
     @Autowired
     private PublisherRepository publisherRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
 
     @BeforeEach
     void setUpTestPublisher() {
@@ -152,5 +163,148 @@ public class PublisherApiTest {
                 .andExpect(jsonPath("$._embedded.publishers").isEmpty());
     }
 
-    // TODO: create add/save apis tomorrows task
+// these is not working as we are using Data rest Api
+    // TODO : validator should be applied so that if the id previously exists it should not update it
+//    @Test
+//    void shouldReturnConflictWhenIdAlreadyExists() throws Exception {
+//        // 1. Setup: Ensure the publisher already exists (or mock it)
+//        String publisherJson = objectMapper.writeValueAsString(testPublisher);
+//
+//        // 2. Action: POST the same entity again
+//        mockMvc.perform(post("/api/publishers")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(publisherJson))
+//                .andExpect(status().isConflict()); // Or .isBadRequest() depending on your logic
+//    }
+
+    @Test
+    void shouldUpdateExistingPublisher() throws Exception {
+        // 1. Modify the object
+        testPublisher.setPubName("Updated Name");
+        String updatedJson = objectMapper.writeValueAsString(testPublisher);
+
+        // 2. Action: PUT request to update
+        mockMvc.perform(put("/api/publishers/" + testPublisher.getPubId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updatedJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pubName").value("Updated Name"));
+    }
+
+    @Test
+    void shouldUpdateOnlyPubNameUsingPatch() throws Exception {
+        String id = testPublisher.getPubId();
+
+        // We only create a map or a partial object with the name
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("pubName", "New Shiny Name");
+
+        String json = objectMapper.writeValueAsString(updates);
+
+        mockMvc.perform(patch("/api/publishers/" + id) // Use patch()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pubName").value("New Shiny Name"))
+                // Ensure other fields (like city) remained the same
+                .andExpect(jsonPath("$.city").exists());
+    }
+
+    /**
+     * TEST: Validation - Invalid pub_id format
+     * Constraints: ^(1389|0736|0877|1622|1756|99\d{2})$
+     * Verifies that the API rejects IDs that don't match the specific business pattern.
+     */
+    @Test
+    void shouldReturnBadRequestWhenIdDoesNotMatchRegex() throws Exception {
+        Publisher invalidIdPublisher = Publisher.builder()
+                .pubId("1234") // Invalid ID per @Pattern
+                .pubName("Test Publisher")
+                .state("NY")
+                .build();
+
+        mockMvc.perform(post("/api/publishers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidIdPublisher)))
+                .andExpect(status().isBadRequest());
+    }
+
+    /**
+     * TEST: Validation - State code length
+     * Constraint: @Size(min = 2, max = 2)
+     * Verifies that the API rejects state codes longer than 2 characters.
+     */
+    @Test
+    void shouldReturnBadRequestWhenStateCodeIsInvalid() throws Exception {
+        Publisher invalidStatePublisher = Publisher.builder()
+                .pubId("9955")
+                .pubName("Test Publisher")
+                .state("NYK") // 3 chars - Invalid
+                .build();
+
+        mockMvc.perform(post("/api/publishers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidStatePublisher)))
+                .andExpect(status().isBadRequest());
+    }
+
+    /**
+     * TEST: Validation - Required field missing
+     * Constraint: @NotBlank(message = "publisher name cannot be empty")
+     * Verifies that the API rejects requests where the publisher name is null or empty.
+     */
+    @Test
+    void shouldReturnBadRequestWhenNameIsBlank() throws Exception {
+        Publisher blankNamePublisher = Publisher.builder()
+                .pubId("9966")
+                .pubName("") // Blank - Invalid
+                .state("CA")
+                .build();
+
+        mockMvc.perform(post("/api/publishers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(blankNamePublisher)))
+                .andExpect(status().isBadRequest());
+    }
+
+    /**
+     * TEST: Update - Resource Not Found
+     * Verifies that attempting to update a non-existent ID returns 404.
+     */
+
+    // TODO : configuration should be done so that if the record is not exist put returns error
+//    @Test
+//    void shouldReturnNotFoundWhenUpdatingNonExistentId() throws Exception {
+//        String nonExistentId = "9900"; // Ensure this isn't in your setup
+//
+//        Publisher updateData = Publisher.builder()
+//                .pubId(nonExistentId)
+//                .pubName("New Name")
+//                .build();
+//
+//        mockMvc.perform(put("/api/publishers/" + nonExistentId)
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(objectMapper.writeValueAsString(updateData)))
+//                .andExpect(status().isNotFound());
+//    }
+
+    /**
+     * TEST: Logic - Default Country assignment
+     * Verifies that the entity's default value "USA" is preserved when not provided in JSON.
+     */
+    @Test
+    void shouldSaveWithDefaultCountryWhenNotProvided() throws Exception {
+        Publisher publisher = Publisher.builder()
+                .pubId("9977")
+                .pubName("International Books")
+                .state("WA")
+                // country is not set here
+                .build();
+
+        mockMvc.perform(post("/api/publishers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(publisher)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.country").value("USA"));
+    }
 }
