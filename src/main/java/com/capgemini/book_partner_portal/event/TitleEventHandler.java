@@ -25,19 +25,22 @@ public class TitleEventHandler {
     public void handleTitleBeforeCreate(Title title) {
         String incomingId = title.getTitleId();
 
-        // If the ID (e.g., 'BU1032') already exists, don't let a POST create it again.
-        if (incomingId != null && titleRepository.existsById(incomingId)) {
-            throw new ResourceAlreadyExistsException("Cannot create: A book with ID '" + incomingId + "' already exists in the Pubs database.");
-        }
-       
-        // If a user tries to PUT /api/titles/NEW123 but NEW123 doesn't exist, 
-        // Spring Data REST normally creates it. This block forces a 404 instead.
+        // 1. POST Check: Prevent Duplicate ID (Upsert Hack)
         String httpMethod = request.getMethod();
-        if ("PUT".equalsIgnoreCase(httpMethod) || "PATCH".equalsIgnoreCase(httpMethod)) {
-            throw new ResourceNotFoundException("Update failed: Title ID '" + incomingId + "' not found. You cannot update a non-existent book.");
+        if ("POST".equalsIgnoreCase(httpMethod)) {
+            if (incomingId != null && titleRepository.existsById(incomingId)) {
+                throw new ResourceAlreadyExistsException("Cannot create: A book with ID '" + incomingId + "' already exists.");
+            }
         }
-        
-        // Ensure new titles are always created as active
-        title.setActive(true);
+
+        // Logic: If I am updating but the ID doesn't exist in DB, throw 404.
+        if ("PUT".equalsIgnoreCase(httpMethod) || "PATCH".equalsIgnoreCase(httpMethod)) {
+            if (incomingId == null || !titleRepository.existsById(incomingId)) {
+                throw new ResourceNotFoundException("Update failed: Title ID '" + incomingId + "' not found.");
+            }
+        }
+
+        // 3. Force Active State
+        title.setIsActive(true); // Fixed: Use the setter name from your entity
     }
 }

@@ -9,7 +9,8 @@ import java.time.LocalDateTime;
 
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.annotations.Where;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "titles")
@@ -18,13 +19,11 @@ import org.hibernate.annotations.Where;
 @AllArgsConstructor
 @SQLDelete(sql = "UPDATE titles SET is_active = false WHERE title_id = ?")
 // 2. Secretly append "WHERE is_active = true" to every single SELECT query
-@Where(clause = "is_active = true")
+@SQLRestriction("is_active = true")
 public class Title {
 
     @Id
-    @Column(name = "title_id", length = 10, nullable = false)
-    @NotBlank(message = "Title ID is required")
-    @Size(max = 10)
+    @Column(name = "title_id", nullable = false, length = 6, updatable = false) 
     private String titleId;
 
     @Column(name = "title", length = 80, nullable = false)
@@ -60,11 +59,11 @@ public class Title {
     @Size(max = 200)
     private String notes;
 
-    @Column(name = "pubdate", nullable = false)
-    @NotNull(message = "Publication date is required")
+    @Column(name = "pubdate", nullable = false, updatable = false) 
     private LocalDateTime pubdate;
 
+    @JsonIgnore // 
     @Column(name = "is_active", nullable = false)
-    private boolean isActive = true;
+    private Boolean isActive = true;
 
 }
