@@ -7,11 +7,18 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.Where;
+
 @Entity
 @Table(name = "titles")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@SQLDelete(sql = "UPDATE titles SET is_active = false WHERE title_id = ?")
+// 2. Secretly append "WHERE is_active = true" to every single SELECT query
+@Where(clause = "is_active = true")
 public class Title {
 
     @Id
@@ -25,14 +32,14 @@ public class Title {
     @Size(max = 80)
     private String title;
 
-    @Column(name = "type", length = 12, nullable = false)
+    @Column(name = "type", columnDefinition = "CHAR(12)", nullable = false)
     @NotBlank(message = "Type is required")
     @Size(max = 12)
-    private String type = "UNDECIDED"; // Default value from schema
-
-    @Column(name = "pub_id", length = 4)
-    @Size(max = 4)
-    private String pubId; // Stored as a simple String for now
+    private String type = "UNDECIDED"; 
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "pub_id", referencedColumnName = "pub_id")
+    private Publisher publisher; 
 
     @Column(name = "price")
     @DecimalMin(value = "0.0", message = "Price cannot be negative")
@@ -56,4 +63,8 @@ public class Title {
     @Column(name = "pubdate", nullable = false)
     @NotNull(message = "Publication date is required")
     private LocalDateTime pubdate;
+
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive = true;
+
 }
