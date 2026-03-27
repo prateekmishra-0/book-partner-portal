@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -335,5 +338,28 @@ public class PublisherRepositoryTest {
         assertThrows(ConstraintViolationException.class, () -> {
             publisherRepository.saveAndFlush(noNamePub);
         });
+    }
+
+    /**
+     * REPOSITORY TEST: Find All Pagination
+     * Verifies that the database correctly slices the data into pages.
+     */
+    @Test
+    void shouldReturnCorrectPageSliceForFindAll() {
+
+        long count = publisherRepository.count();
+        // 1. Setup: Save 3 publishers to the database
+        publisherRepository.save(Publisher.builder().pubId("9911").pubName("Alpha").build());
+        publisherRepository.save(Publisher.builder().pubId("9912").pubName("Beta").build());
+        publisherRepository.save(Publisher.builder().pubId("9913").pubName("Gamma").build());
+
+        // 2. Action: Request Page 0 with a size of 2, sorted by ID
+        PageRequest pageRequest = PageRequest.of(0, 2, Sort.by("pubId").ascending());
+        Page<Publisher> result = publisherRepository.findAll(pageRequest);
+
+        // 3. Assertions
+        Assertions.assertEquals(2, result.getContent().size(), "Should only return 2 records for the first page");
+        Assertions.assertEquals(count + 3, result.getTotalElements(), "Total count in DB should be count + 3");
+        Assertions.assertTrue(result.hasNext(), "There should be a next page since total is 3 and size is 2");
     }
 }

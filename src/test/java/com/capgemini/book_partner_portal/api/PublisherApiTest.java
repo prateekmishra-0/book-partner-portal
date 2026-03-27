@@ -307,4 +307,34 @@ public class PublisherApiTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.country").value("USA"));
     }
+
+
+    /**
+     * API TEST: Find All Pagination (HAL-JSON)
+     * Verifies that the REST endpoint returns the correct HATEOAS structure and page info.
+     */
+    @Test
+    void shouldReturnHalPagingMetadataForFindAll() throws Exception {
+        // 1. Action: Perform GET request with page parameters
+        mockMvc.perform(get("/api/publishers")
+                        .param("page", "0")
+                        .param("size", "2")
+                        .param("sort", "pubId,asc")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+
+                // 2. Verify Data: Check if the list is inside the '_embedded' field
+                .andExpect(jsonPath("$._embedded.publishers").isArray())
+                .andExpect(jsonPath("$._embedded.publishers.length()").value(2))
+
+                // 3. Verify Metadata: Check the 'page' object
+                .andExpect(jsonPath("$.page.size").value(2))
+                .andExpect(jsonPath("$.page.number").value(0))
+                .andExpect(jsonPath("$.page.totalElements").exists())
+
+                // 4. Verify HATEOAS: Check for navigation links
+                .andExpect(jsonPath("$._links.self").exists())
+                .andExpect(jsonPath("$._links.next").exists()) // Only if total records > 2
+                .andExpect(jsonPath("$._links.last").exists());
+    }
 }
