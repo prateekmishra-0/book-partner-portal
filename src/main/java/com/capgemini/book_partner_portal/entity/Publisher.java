@@ -1,6 +1,6 @@
 package com.capgemini.book_partner_portal.entity;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -11,8 +11,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
-
-import java.util.List;
 
 @Entity
 @Data
@@ -27,7 +25,7 @@ import java.util.List;
 public class Publisher {
 
     @Id
-    @Column(name = "pub_id", length = 4)
+    @Column(name = "pub_id", length = 4, updatable = false)
     // Constraint: 1389, 0736, 0877, 1622, 1756 OR 99XX pattern
     @Pattern(regexp = "^(1389|0736|0877|1622|1756|99\\d{2})$",
             message = "Invalid pub_id format")
@@ -50,5 +48,6 @@ public class Publisher {
 
     @Builder.Default
     @Column(name = "is_active")
+    @JsonIgnore
     private boolean isActive = true;
 }
