@@ -28,6 +28,14 @@ public class GlobalExceptionHandler {
                 .body("Validation failed: " + e.getMessage());
     }
 
+    // Catch attempts to overwrite existing records via POST
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<String> handleResourceAlreadyExists(Exception e) {
+        // 409 Conflict is the REST standard for "This ID is already taken"
+        return ResponseEntity.status(409)
+                .body("Conflict: " + e.getMessage());
+    }
+
     @ExceptionHandler
     public ResponseEntity<String> handleException(Exception e) {
 
