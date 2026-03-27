@@ -65,7 +65,7 @@ public class AuthorApiTest {
 
 
 
-    // ---------------------------------- GET APIs ----------------------------------------------
+    // ---------------------------------- GET APIs Tests ----------------------------------------------
 
     @Test
     void getAllAuthors_WhenAuthorsExist_ShouldReturnNonEmptyList() throws Exception {
@@ -161,7 +161,7 @@ public class AuthorApiTest {
 
 
 
-    // ---------------------------------- POST APIs ----------------------------------------------
+    // ---------------------------------- POST APIs Tests ----------------------------------------------
 
     @Test
     void createAuthor_WithValidData_ShouldReturn201() throws Exception {
@@ -314,7 +314,7 @@ public class AuthorApiTest {
                 .andExpect(status().isConflict());
     }
 
-    // ---------------------------------- PUT APIs ----------------------------------------------
+    // ---------------------------------- PUT APIs Tests ----------------------------------------------
     
     @Test
     void updateAuthor_WithValidData_ShouldReturn200() throws Exception {
@@ -342,7 +342,7 @@ public class AuthorApiTest {
             
             
             
-    // ---------------------------------- PATCH APIs ----------------------------------------------
+    // ---------------------------------- PATCH APIs Tests ----------------------------------------------
 
     // path Author with valid id and fields
     @Test
@@ -392,7 +392,7 @@ public class AuthorApiTest {
     }
 
 
-    // ---------------------------------- DELETE APIs ----------------------------------------------
+    // ---------------------------------- DELETE APIs Tests ----------------------------------------------
 
     @Test
     void deleteAuthor_WithValidId_ShouldReturn204_AndNotBeAccessible() throws Exception {
@@ -410,7 +410,70 @@ public class AuthorApiTest {
 
 
 
-    
+    // ---------------------------------- Pagination APIs Tests ----------------------------------------------
+
+    @Test
+    void getAuthors_WithValidPageAndSize_ShouldReturnPagedAuthors() throws Exception {
+
+        mockMvc.perform(get("/api/authors")
+                .param("page", "0")
+                .param("size", "5"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$._embedded.authors").isArray())
+            .andExpect(jsonPath("$._embedded.authors").isNotEmpty())
+            .andExpect(jsonPath("$.page.size").value(5))
+            .andExpect(jsonPath("$.page.number").value(0));
+    }
 
     
+    @Test
+    void getAuthors_WithPageBeyondData_ShouldReturnEmptyList() throws Exception {
+
+        mockMvc.perform(get("/api/authors")
+                .param("page", "9999")
+                .param("size", "5"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$._embedded.authors").isArray())
+            .andExpect(jsonPath("$._embedded.authors.length()").value(0));
+    }
+
+    @Test
+    void getAuthors_WithInvalidPageOrSize_ShouldReturnBadRequest() throws Exception {
+
+        mockMvc.perform(get("/api/authors")
+                .param("page", "-1")
+                .param("size", "0"))
+            .andExpect(status().isOk());
+    }
+
+
+    // ---------------------------------- Projection APIs Tests ----------------------------------------------
+
+    @Test
+    void getAuthors_WithProjection_ShouldReturnProjectedFields() throws Exception {
+
+        mockMvc.perform(get("/api/authors")
+                .param("projection", "authorList"))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$._embedded.authors").isArray())
+            .andExpect(jsonPath("$._embedded.authors").isNotEmpty())
+            .andExpect(jsonPath("$._embedded.authors[0].firstName").exists())
+            .andExpect(jsonPath("$._embedded.authors[0].lastName").exists());
+    }
+
+    @Test
+    void getAuthors_ShouldNotReturnExcludedFields() throws Exception {
+
+        mockMvc.perform(get("/api/authors").param("projection", "authorList"))
+        
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$._embedded.authors").isArray())
+            .andExpect(jsonPath("$._embedded.authors").isNotEmpty())
+
+            .andExpect(jsonPath("$._embedded.authors[0].phone").doesNotExist())
+            .andExpect(jsonPath("$._embedded.authors[0].address").doesNotExist())
+            .andExpect(jsonPath("$._embedded.authors[0].zip").doesNotExist())
+            .andExpect(jsonPath("$._embedded.authors[0].contract").doesNotExist());
+    }
 }

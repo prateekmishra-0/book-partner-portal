@@ -234,7 +234,7 @@ public class AuthorRepositoryTest {
             .city("Oakland")
             .state("CA")
             .zip("11")
-            .contract(null)
+            .contract(1)
             .build();
 
         
