@@ -14,6 +14,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import org.springframework.http.MediaType;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 
 @SpringBootTest
 @Transactional
@@ -46,6 +49,7 @@ public class EmployeeApiIntegrationTest {
                 // If even one employee has a hireDate or pubId, this will fail.
                 .andExpect(jsonPath("$._embedded.employees[*].empId").doesNotExist())
                 .andExpect(jsonPath("$._embedded.employees[*].hireDate").doesNotExist())
+                .andExpect(jsonPath("$._embedded.employees[*].isActive").doesNotExist())
                 .andExpect(jsonPath("$._embedded.employees[*].pubId").doesNotExist());
     }
 
@@ -263,6 +267,162 @@ public class EmployeeApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(incompleteEmployeeJson))
                 .andExpect(status().isBadRequest()); // Expecting 400 Bad Request
+    }
+
+
+    // --- 1. PUT: The Full Replacement Test ---
+    @Test
+    public void testUpdateEmployee_WithPut_ShouldReplaceData() throws Exception {
+        // Goal: The frontend sends a full object to overwrite Philip Cramer's mutable fields.
+        // We are changing his last name to "Smith" and his job level to 225.
+        String updatedEmployeeJson = """
+                {
+                    "fname": "Philip",
+                    "lname": "Smith",
+                    "jobLvl": 225,
+                    "pubId": "9952"
+                }
+                """;
+
+        mockMvc.perform(put("/api/employees/PTC11962M")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updatedEmployeeJson))
+                .andExpect(status().isOk()) // REST Standard: 200 OK for successful update
+                .andExpect(jsonPath("$.lname", is("Smith")))
+                .andExpect(jsonPath("$.jobLvl", is(225)));
+    }
+
+    // --- 2. PATCH: The Partial Update Test ---
+    @Test
+    public void testPartialUpdateEmployee_WithPatch_ShouldUpdateSingleField() throws Exception {
+        // Goal: The frontend only sends a single changed field (Job Level).
+        // We must prove that Spring Data REST updates the Job Level WITHOUT erasing his First/Last name.
+        String patchJson = """
+                {
+                    "jobLvl": 250
+                }
+                """;
+
+        mockMvc.perform(patch("/api/employees/PTC11962M")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(patchJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.jobLvl", is(250)))
+                // CRUCIAL: Prove the first name survived the partial update!
+                .andExpect(jsonPath("$.fname", is("Philip")));
+    }
+
+    // --- 3. PATCH: The Validation Failure Test ---
+    @Test
+    public void testUpdateEmployee_WithInvalidData_ShouldReturnBadRequest() throws Exception {
+        // Goal: A hacker tries to erase Philip's first name by sending a blank string.
+        // Our RestValidationConfig attached to the "beforeSave" event must catch this.
+        String badPatchJson = """
+                {
+                    "fname": ""
+                }
+                """;
+
+        mockMvc.perform(patch("/api/employees/PTC11962M")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(badPatchJson))
+                .andExpect(status().isBadRequest()); // Expecting 400 Bad Request
+    }
+
+    // --- DELETE: The Soft Delete Test ---
+    @Test
+    public void testDeleteEmployee_ShouldSoftDeleteAndReturnNotFound() throws Exception {
+        // STEP 1: The Deletion Strike
+        // We send a DELETE request for an existing employee.
+        // Spring Data REST should return a 204 No Content on a successful delete.
+        mockMvc.perform(delete("/api/employees/AMD15433F"))
+                .andExpect(status().isNoContent());
+
+        // STEP 2: The Ghost Verification
+        // We immediately try to GET that exact same employee.
+        // Because @SQLRestriction("is_active = true") is on the entity,
+        // Hibernate will hide the record and return a 404 Not Found, proving the soft delete worked!
+        mockMvc.perform(get("/api/employees/AMD15433F"))
+                .andExpect(status().isNotFound());
+    }
+
+    // --- 5. POST: The Upsert Vulnerability Defense ---
+    @Test
+    public void testAddEmployee_WhenIdAlreadyExists_ShouldReturnConflict() throws Exception {
+        // Goal: Prove that POSTing an existing ID throws a 409 Conflict and doesn't overwrite the original data.
+
+        // PTC11962M belongs to Philip Cramer
+        String duplicateEmployeeJson = """
+                {
+                    "empId": "PTC11962M",
+                    "fname": "Hacker",
+                    "lname": "Man",
+                    "jobLvl": 200
+                }
+                """;
+
+        // 1. Send the malicious POST request
+        mockMvc.perform(post("/api/employees")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(duplicateEmployeeJson))
+                .andExpect(status().isConflict()); // HTTP 409 Conflict from our Event Handler
+
+        // 2. Verify Philip Cramer's data survived the attack
+        mockMvc.perform(get("/api/employees/PTC11962M"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fname", is("Philip"))) // His name is still Philip
+                .andExpect(jsonPath("$.lname", is("Cramer")));
+    }
+
+    // --- 6. POST: The Invisible Shield (isActive) Defense ---
+    @Test
+    public void testAddEmployee_WithIsActiveFalse_ShouldIgnoreAndSetTrue() throws Exception {
+        // Goal: Prove that the @JsonIgnore annotation stops users from manipulating the isActive flag.
+
+        String maliciousJson = """
+                {
+                    "empId": "HAK99999M",
+                    "fname": "Sneaky",
+                    "lname": "Hacker",
+                    "jobLvl": 150,
+                    "isActive": false 
+                }
+                """;
+
+        // 1. The creation will succeed (201 Created) because the ID is new
+        mockMvc.perform(post("/api/employees")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(maliciousJson))
+                .andExpect(status().isCreated());
+
+        // 2. The Verification Magic
+        // If the hacker successfully set isActive=false, the @SQLRestriction would hide the record,
+        // and this GET request would return a 404 Not Found.
+        // If it returns 200 OK, it proves the parser ignored the hacker's false flag and used our default 'true'!
+        mockMvc.perform(get("/api/employees/HAK99999M"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fname", is("Sneaky")));
+    }
+
+    // --- 7. PUT: The Phantom Insert Defense ---
+    @Test
+    public void testUpdateEmployee_WhenIdDoesNotExist_ShouldReturnNotFound() throws Exception {
+        // Goal: Prove that sending a PUT request to a non-existent ID throws a 404 Not Found
+        // instead of accidentally creating a new employee.
+
+        String fakeEmployeeJson = """
+                {
+                    "fname": "Phantom",
+                    "lname": "Insert",
+                    "jobLvl": 200,
+                    "pubId": "1389"
+                }
+                """;
+
+        mockMvc.perform(put("/api/employees/FAKE999M")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(fakeEmployeeJson))
+                .andExpect(status().isNotFound()); // HTTP 404 Not Found from our Event Handler!
     }
 
 }

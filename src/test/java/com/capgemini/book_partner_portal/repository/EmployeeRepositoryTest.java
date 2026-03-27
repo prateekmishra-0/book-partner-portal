@@ -26,8 +26,8 @@ public class EmployeeRepositoryTest {
         // Using strict schema data:
         // 1. emp_id matches the CHECK constraint (3 letters, digit 1-9, 4 digits, F/M)
         // 2. pub_id uses actual IDs from the publishers table ("0877" and "1389")
-        employeeRepository.save(new Employee("ABC12345M", "Clark", "Kent", LocalDate.now(), "0877", 10));
-        employeeRepository.save(new Employee("XYZ98765F", "Bruce", "Wayne", LocalDate.now(), "1389", 10));
+        employeeRepository.save(new Employee("ABC12345M", "Clark", "Kent", LocalDate.now(), "0877", 10, true));
+        employeeRepository.save(new Employee("XYZ98765F", "Bruce", "Wayne", LocalDate.now(), "1389", 10, true));
     }
 
     // STRICTLY testing only the findAll() method currently used by the API
