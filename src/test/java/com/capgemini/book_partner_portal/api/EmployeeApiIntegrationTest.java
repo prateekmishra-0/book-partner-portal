@@ -14,6 +14,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import org.springframework.http.MediaType;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 
 @SpringBootTest
 @Transactional
@@ -262,6 +264,66 @@ public class EmployeeApiIntegrationTest {
         mockMvc.perform(post("/api/employees")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(incompleteEmployeeJson))
+                .andExpect(status().isBadRequest()); // Expecting 400 Bad Request
+    }
+
+
+    // --- 1. PUT: The Full Replacement Test ---
+    @Test
+    public void testUpdateEmployee_WithPut_ShouldReplaceData() throws Exception {
+        // Goal: The frontend sends a full object to overwrite Philip Cramer's mutable fields.
+        // We are changing his last name to "Smith" and his job level to 225.
+        String updatedEmployeeJson = """
+                {
+                    "fname": "Philip",
+                    "lname": "Smith",
+                    "jobLvl": 225,
+                    "pubId": "9952"
+                }
+                """;
+
+        mockMvc.perform(put("/api/employees/PTC11962M")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updatedEmployeeJson))
+                .andExpect(status().isOk()) // REST Standard: 200 OK for successful update
+                .andExpect(jsonPath("$.lname", is("Smith")))
+                .andExpect(jsonPath("$.jobLvl", is(225)));
+    }
+
+    // --- 2. PATCH: The Partial Update Test ---
+    @Test
+    public void testPartialUpdateEmployee_WithPatch_ShouldUpdateSingleField() throws Exception {
+        // Goal: The frontend only sends a single changed field (Job Level).
+        // We must prove that Spring Data REST updates the Job Level WITHOUT erasing his First/Last name.
+        String patchJson = """
+                {
+                    "jobLvl": 250
+                }
+                """;
+
+        mockMvc.perform(patch("/api/employees/PTC11962M")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(patchJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.jobLvl", is(250)))
+                // CRUCIAL: Prove the first name survived the partial update!
+                .andExpect(jsonPath("$.fname", is("Philip")));
+    }
+
+    // --- 3. PATCH: The Validation Failure Test ---
+    @Test
+    public void testUpdateEmployee_WithInvalidData_ShouldReturnBadRequest() throws Exception {
+        // Goal: A hacker tries to erase Philip's first name by sending a blank string.
+        // Our RestValidationConfig attached to the "beforeSave" event must catch this.
+        String badPatchJson = """
+                {
+                    "fname": ""
+                }
+                """;
+
+        mockMvc.perform(patch("/api/employees/PTC11962M")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(badPatchJson))
                 .andExpect(status().isBadRequest()); // Expecting 400 Bad Request
     }
 

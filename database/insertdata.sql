@@ -9,6 +9,7 @@ values (
            'Berkeley',
            'CA',
            '94705',
+           1,
            1
        );
 insert into authors
@@ -21,6 +22,7 @@ values (
            'Oakland',
            'CA',
            '94618',
+           1,
            1
        );
 insert into authors
@@ -33,6 +35,7 @@ values (
            'Berkeley',
            'CA',
            '94705',
+           1,
            1
        );
 insert into authors
@@ -45,6 +48,7 @@ values (
            'Salt Lake City',
            'UT',
            '84152',
+           1,
            1
        );
 insert into authors
@@ -57,6 +61,7 @@ values (
            'Salt Lake City',
            'UT',
            '84152',
+           1,
            1
        );
 insert into authors
@@ -69,6 +74,7 @@ values (
            'Gary',
            'IN',
            '46403',
+           1,
            1
        );
 insert into authors
@@ -81,6 +87,7 @@ values (
            'Rockville',
            'MD',
            '20853',
+           1,
            1
        );
 insert into authors
@@ -93,7 +100,8 @@ values (
            'Vacaville',
            'CA',
            '95688',
-           0
+           0,
+           1
        );
 insert into authors
 values (
@@ -105,7 +113,8 @@ values (
            'Oakland',
            'CA',
            '94609',
-           0
+           0,
+           1
        );
 insert into authors
 values (
@@ -117,6 +126,7 @@ values (
            'Oakland',
            'CA',
            '94609',
+           1,
            1
        );
 insert into authors
@@ -129,6 +139,7 @@ values (
            'Oakland',
            'CA',
            '94609',
+           1,
            1
        );
 insert into authors
@@ -141,6 +152,7 @@ values (
            'Oakland',
            'CA',
            '94612',
+           1,
            1
        );
 insert into authors
@@ -153,6 +165,7 @@ values (
            'Palo Alto',
            'CA',
            '94301',
+           1,
            1
        );
 insert into authors
@@ -165,6 +178,7 @@ values (
            'Walnut Creek',
            'CA',
            '94595',
+           1,
            1
        );
 insert into authors
@@ -177,6 +191,7 @@ values (
            'San Jose',
            'CA',
            '95128',
+           1,
            1
        );
 insert into authors
@@ -189,7 +204,8 @@ values (
            'Covelo',
            'CA',
            '95428',
-           3
+           3,
+           1
        );
 insert into authors
 values (
@@ -201,7 +217,8 @@ values (
            'Nashville',
            'TN',
            '37215',
-           0
+           0,
+           1
        );
 insert into authors
 values (
@@ -213,6 +230,7 @@ values (
            'Menlo Park',
            'CA',
            '94025',
+           1,
            1
        );
 insert into authors
@@ -225,6 +243,7 @@ values (
            'Ann Arbor',
            'MI',
            '48105',
+           1,
            1
        );
 insert into authors
@@ -237,6 +256,7 @@ values (
            'Palo Alto',
            'CA',
            '94301',
+           1,
            1
        );
 insert into authors
@@ -249,6 +269,7 @@ values (
            'San Francisco',
            'CA',
            '94130',
+           1,
            1
        );
 insert into authors
@@ -261,6 +282,7 @@ values (
            'Corvallis',
            'OR',
            '97330',
+           1,
            1
        );
 insert into authors
@@ -273,7 +295,8 @@ values (
            'Lawrence',
            'KS',
            '66044',
-           0
+           0,
+           1
        );
 
 ##################### Publishers ###########################
@@ -283,7 +306,8 @@ values (
   'New Moon Books',
   'Boston',
   'MA',
-  'USA'
+  'USA',
+  1
 );
 insert into publishers
 values (
@@ -291,7 +315,8 @@ values (
            'Binnet & Hardley',
            'Washington',
            'DC',
-           'USA'
+           'USA',
+           1
        );
 insert into publishers
 values (
@@ -299,7 +324,8 @@ values (
            'Algodata Infosystems',
            'Berkeley',
            'CA',
-           'USA'
+           'USA',
+           1
        );
 insert into publishers
 values (
@@ -307,7 +333,8 @@ values (
            'Scootney Books',
            'New York',
            'NY',
-           'USA'
+           'USA',
+           1
        );
 insert into publishers
 values (
@@ -315,7 +342,8 @@ values (
            'Five Lakes Publishing',
            'Chicago',
            'IL',
-           'USA'
+           'USA',
+           1
        );
 insert into publishers
 values (
@@ -323,7 +351,8 @@ values (
            'Ramona Publishers',
            'Dallas',
            'TX',
-           'USA'
+           'USA',
+           1
        );
 insert into publishers
 values (
@@ -331,7 +360,8 @@ values (
            'GGG&G',
            'M nchen',
            null,
-           'Germany'
+           'Germany',
+           1
        );
 insert into publishers
 values (
@@ -339,7 +369,8 @@ values (
            'Lucerne Publishing',
            'Paris',
            null,
-           'France'
+           'France',
+           1
        );
 
 #################### titles ############################
@@ -354,7 +385,8 @@ values (
   10,
   4095,
   'Muckraking reporting on the worlds largest computer hardware and software manufacturers.',
-  '1994-06-12'
+  '1994-06-12',
+  1
 );
 
 insert into titles
@@ -368,7 +400,8 @@ values (
            10,
            4095,
            'An overview of available database systems with emphasis on common business applications. Illustrated.',
-           '1991-06-12'
+           '1991-06-12',
+           1
        );
 
 insert into titles
@@ -382,7 +415,8 @@ values (
            10,
            3336,
            'Protecting yourself and your loved ones from undue emotional stress in the modern world. Use of computer and nutritional aids emphasized.',
-           '1991-06-12'
+           '1991-06-12',
+           1
        );
 
 insert into titles
@@ -396,7 +430,8 @@ values (
            10,
            4072,
            'What happens when the data runs dry?  Searching evaluations of information-shortage effects.',
-           '1991-06-12'
+           '1991-06-12',
+           1
        );
 insert into titles
 values (
@@ -409,7 +444,8 @@ values (
            10,
            3876,
            'Helpful hints on how to use your electronic resources to the best advantage.',
-           '1991-06-09'
+           '1991-06-09',
+           1
        );
 insert into titles
 values (
@@ -422,7 +458,8 @@ values (
            12,
            2032,
            'Favorite recipes for quick, easy, and elegant meals.',
-           '1991-06-09'
+           '1991-06-09',
+           1
        );
 insert into titles
 values (
@@ -435,7 +472,8 @@ values (
            10,
            4095,
            'Detailed instructions on how to make authentic Japanese sushi in your spare time.',
-           '1991-06-12'
+           '1991-06-12',
+           1
        );
 insert into titles
 values (
@@ -448,7 +486,8 @@ values (
            14,
            15096,
            'More anecdotes from the Queen''s favorite cook describing life among English royalty. Recipes, techniques, tender vignettes.',
-           '1991-06-12'
+           '1991-06-12',
+           1
        );
 insert into titles
 values (
@@ -461,7 +500,8 @@ values (
            16,
            8780,
            'A survey of software for the naive user, focusing on the ''friendliness'' of each.',
-           '1991-06-30'
+           '1991-06-30',
+           1
        );
 insert into titles
 values (
@@ -474,7 +514,8 @@ values (
            24,
            18722,
            'The latest medical and psychological techniques for living with the electronic office. Easy-to-understand explanations.',
-           '1991-06-30'
+           '1991-06-30',
+           1
        );
 insert into titles
 values (
@@ -487,7 +528,8 @@ values (
            12,
            2045,
            'Carefully researched study of the effects of strong emotions on the body. Metabolic charts included.',
-           '1991-06-15'
+           '1991-06-15',
+           1
        );
 insert into titles
 values (
@@ -500,7 +542,8 @@ values (
            10,
            111,
            'New exercise, meditation, and nutritional techniques that can reduce the shock of daily interactions. Popular audience. Sample menus included, exercise video available separately.',
-           '1991-10-05'
+           '1991-10-05',
+           1
        );
 insert into titles
 values (
@@ -513,7 +556,8 @@ values (
            24,
            22246,
            'Traditional French gourmet recipes adapted for modern microwave cooking.',
-           '1991-06-18'
+           '1991-06-18',
+           1
        );
 insert into titles
 values (
@@ -526,14 +570,9 @@ values (
            10,
            375,
            'Profusely illustrated in color, this makes a wonderful gift book for a cuisine-oriented friend.',
-           '1991-10-21'
+           '1991-10-21',
+           1
        );
-/*insert into titles (title_id, title, pub_id)
-values (
-  'MC3026',
-  'The Psychology of Computer Cooking',
-  '0877'
-);*/
 insert into titles
 values (
            'BU7832',
@@ -545,7 +584,8 @@ values (
            10,
            4095,
            'Annotated analysis of what computers can do for you: a no-hype guide for the critical user.',
-           '1991-06-22'
+           '1991-06-22',
+           1
        );
 insert into titles
 values (
@@ -558,25 +598,9 @@ values (
            10,
            375,
            'A must for the specialist, this book examines the difference between those who hate and fear computers and those who don''t.',
-           '1991-10-21'
+           '1991-10-21',
+           1
        );
-/*
-insert into titles (
-  title_id,
-  title,
-  type,
-  pub_id,
-  notes
-)
-values (
-  'PC9999',
-  'Net Etiquette',
-  'popular_comp',
-  '1389',
-  'A must-read for computer conferencing.'
-);
-
-*/
 
 ###################titleauthor########################
 insert into titleauthor
@@ -593,13 +617,6 @@ values (
            1,
            100
        );
--- insert into titleauthor
--- values (
---   '486-29-1786',
---   'PC9999',
---   1,
---   100
--- );
 insert into titleauthor
 values (
            '712-45-1867',
@@ -763,7 +780,8 @@ values (
   '567 Pasadena Ave.',
   'Tustin',
   'CA',
-  '92789'
+  '92789',
+  1
 );
 insert into stores
 values (
@@ -772,7 +790,8 @@ values (
            '577 First St.',
            'Los Gatos',
            'CA',
-           '96745'
+           '96745',
+           1
        );
 insert into stores
 values (
@@ -781,7 +800,8 @@ values (
            '24-A Avogadro Way',
            'Remulade',
            'WA',
-           '98014'
+           '98014',
+           1
        );
 insert into stores
 values (
@@ -790,7 +810,8 @@ values (
            '679 Carson St.',
            'Portland',
            'OR',
-           '89076'
+           '89076',
+           1
        );
 insert into stores
 values (
@@ -799,7 +820,8 @@ values (
            '788 Catamaugus Ave.',
            'Seattle',
            'WA',
-           '98056'
+           '98056',
+           1
        );
 insert into stores
 values (
@@ -808,7 +830,8 @@ values (
            '89 Madison St.',
            'Fremont',
            'CA',
-           '90019'
+           '90019',
+           1
        );
 
 ########################sales####################
@@ -1572,7 +1595,8 @@ values (
   2,
   215,
   '9952',
-  '1989-11-11'
+  '1989-11-11',
+  1
 );
 insert into employee
 values (
@@ -1583,7 +1607,8 @@ values (
            3,
            200,
            '9952',
-           '1991-07-16'
+           '1991-07-16',
+           1
        );
 insert into employee
 values (
@@ -1594,7 +1619,8 @@ values (
            4,
            227,
            '9952',
-           '1990-11-03'
+           '1990-11-03',
+           1
        );
 insert into employee
 values (
@@ -1605,7 +1631,8 @@ values (
            5,
            175,
            '0736',
-           '1990-06-03'
+           '1990-06-03',
+           1
        );
 insert into employee
 values (
@@ -1616,7 +1643,8 @@ values (
            5,
            159,
            '0877',
-           '1993-08-19'
+           '1993-08-19',
+           1
        );
 insert into employee
 values (
@@ -1627,7 +1655,8 @@ values (
            5,
            150,
            '1389',
-           '1991-04-05'
+           '1991-04-05',
+           1
        );
 insert into employee
 values (
@@ -1638,7 +1667,8 @@ values (
            5,
            198,
            '1622',
-           '1993-10-09'
+           '1993-10-09',
+           1
        );
 insert into employee
 values (
@@ -1649,7 +1679,8 @@ values (
            5,
            246,
            '1756',
-           '1989-03-01'
+           '1989-03-01',
+           1
        );
 insert into employee
 values (
@@ -1660,7 +1691,8 @@ values (
            5,
            172,
            '9901',
-           '1991-05-26'
+           '1991-05-26',
+           1
        );
 insert into employee
 values (
@@ -1671,7 +1703,8 @@ values (
            5,
            211,
            '9999',
-           '1989-04-21'
+           '1989-04-21',
+           1
        );
 insert into employee
 values (
@@ -1682,7 +1715,8 @@ values (
            6,
            140,
            '0877',
-           '1990-09-13'
+           '1990-09-13',
+           1
        );
 insert into employee
 values (
@@ -1693,7 +1727,8 @@ values (
            7,
            120,
            '0877',
-           '1991-02-13'
+           '1991-02-13',
+           1
        );
 insert into employee
 values (
@@ -1704,7 +1739,8 @@ values (
            8,
            100,
            '0877',
-           '1993-01-27'
+           '1993-01-27',
+           1
        );
 insert into employee
 values (
@@ -1715,7 +1751,8 @@ values (
            9,
            75,
            '0877',
-           '1992-02-05'
+           '1992-02-05',
+           1
        );
 insert into employee
 values (
@@ -1726,7 +1763,8 @@ values (
            10,
            75,
            '0877',
-           '1992-05-17'
+           '1992-05-17',
+           1
        );
 insert into employee
 values (
@@ -1737,7 +1775,8 @@ values (
            11,
            75,
            '0877',
-           '1990-01-01'
+           '1990-01-01',
+           1
        );
 insert into employee
 values (
@@ -1748,7 +1787,8 @@ values (
            12,
            35,
            '0877',
-           '1989-09-21'
+           '1989-09-21',
+           1
        );
 insert into employee
 values (
@@ -1759,7 +1799,8 @@ values (
            13,
            35,
            '0877',
-           '1992-08-27'
+           '1992-08-27',
+           1
        );
 insert into employee
 values (
@@ -1770,7 +1811,8 @@ values (
            14,
            35,
            '0877',
-           '1990-07-24'
+           '1990-07-24',
+           1
        );
 insert into employee
 values (
@@ -1781,7 +1823,8 @@ values (
            6,
            220,
            '0736',
-           '1992-05-01'
+           '1992-05-01',
+           1
        );
 insert into employee
 values (
@@ -1792,7 +1835,8 @@ values (
            7,
            195,
            '0736',
-           '1993-05-09'
+           '1993-05-09',
+           1
        );
 insert into employee
 values (
@@ -1803,7 +1847,8 @@ values (
            8,
            175,
            '0736',
-           '1993-06-29'
+           '1993-06-29',
+           1
        );
 insert into employee
 values (
@@ -1814,7 +1859,8 @@ values (
            9,
            170,
            '0736',
-           '1988-08-09'
+           '1988-08-09',
+           1
        );
 insert into employee
 values (
@@ -1825,7 +1871,8 @@ values (
            10,
            165,
            '0736',
-           '1990-04-13'
+           '1990-04-13',
+           1
        );
 insert into employee
 values (
@@ -1836,7 +1883,8 @@ values (
            11,
            150,
            '0736',
-           '1991-09-05'
+           '1991-09-05',
+           1
        );
 insert into employee
 values (
@@ -1847,7 +1895,8 @@ values (
            12,
            100,
            '0736',
-           '1988-11-19'
+           '1988-11-19',
+           1
        );
 insert into employee
 values (
@@ -1858,7 +1907,8 @@ values (
            13,
            100,
            '0736',
-           '1988-06-19'
+           '1988-06-19',
+           1
        );
 insert into employee
 values (
@@ -1869,7 +1919,8 @@ values (
            14,
            100,
            '0736',
-           '1992-10-17'
+           '1992-10-17',
+           1
        );
 insert into employee
 values (
@@ -1880,7 +1931,8 @@ values (
            6,
            192,
            '1389',
-           '1991-12-16'
+           '1991-12-16',
+           1
        );
 insert into employee
 values (
@@ -1891,7 +1943,8 @@ values (
            7,
            135,
            '1389',
-           '1992-03-27'
+           '1992-03-27',
+           1
        );
 insert into employee
 values (
@@ -1902,7 +1955,8 @@ values (
            8,
            125,
            '1389',
-           '1994-01-19'
+           '1994-01-19',
+           1
        );
 insert into employee
 values (
@@ -1913,7 +1967,8 @@ values (
            9,
            78,
            '1389',
-           '1988-09-29'
+           '1988-09-29',
+           1
        );
 insert into employee
 values (
@@ -1924,7 +1979,8 @@ values (
            10,
            87,
            '1389',
-           '1991-10-26'
+           '1991-10-26',
+           1
        );
 insert into employee
 values (
@@ -1935,7 +1991,8 @@ values (
            11,
            112,
            '1389',
-           '1992-12-07'
+           '1992-12-07',
+           1
        );
 insert into employee
 values (
@@ -1946,7 +2003,8 @@ values (
            12,
            32,
            '1389',
-           '1989-06-11'
+           '1989-06-11',
+           1
        );
 insert into employee
 values (
@@ -1957,7 +2015,8 @@ values (
            13,
            64,
            '1389',
-           '1992-07-07'
+           '1992-07-07',
+           1
        );
 insert into employee
 values (
@@ -1968,7 +2027,8 @@ values (
            14,
            89,
            '1389',
-           '1990-12-24'
+           '1990-12-24',
+           1
        );
 insert into employee
 values (
@@ -1979,7 +2039,8 @@ values (
            6,
            152,
            '9999',
-           '1990-02-21'
+           '1990-02-21',
+           1
        );
 insert into employee
 values (
@@ -1990,7 +2051,8 @@ values (
            7,
            120,
            '9999',
-           '1993-03-19'
+           '1993-03-19',
+           1
        );
 insert into employee
 values (
@@ -2001,7 +2063,8 @@ values (
            8,
            101,
            '9999',
-           '1989-01-09'
+           '1989-01-09',
+           1
        );
 insert into employee
 values (
@@ -2012,7 +2075,8 @@ values (
            9,
            170,
            '9999',
-           '1994-03-11'
+           '1994-03-11',
+           1
        );
 insert into employee
 values (
@@ -2023,7 +2087,8 @@ values (
            10,
            80,
            '9999',
-           '1993-11-29'
+           '1993-11-29',
+           1
        );
 insert into employee
 values (
@@ -2034,5 +2099,6 @@ values (
            11,
            150,
            '9999',
-           '1989-08-01'
+           '1989-08-01',
+           1
        );
