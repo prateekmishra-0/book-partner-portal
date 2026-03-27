@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.List;
 
@@ -18,6 +20,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "publishers")
+// 1. Hijack the DELETE command and turn it into an UPDATE
+@SQLDelete(sql = "UPDATE publishers SET is_active = false WHERE pub_id = ?")
+// 2. Secretly append "WHERE is_active = true" to every single SELECT query
+@SQLRestriction("is_active = true")
 public class Publisher {
 
     @Id
@@ -41,4 +47,8 @@ public class Publisher {
     @Builder.Default
     @Column(name = "country", length = 30)
     private String country = "USA";
+
+    @Builder.Default
+    @Column(name = "is_active")
+    private boolean isActive = true;
 }

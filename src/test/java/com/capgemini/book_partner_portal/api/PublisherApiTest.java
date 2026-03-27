@@ -83,14 +83,14 @@ public class PublisherApiTest {
                 .andDo(print());
     }
 
-    // searching by city
+    // searching by pubName
     @Test
     void shouldReturnPublisherListByPubName() throws Exception {
         mockMvc.perform(get("/api/publishers/search/pubname").param("pubName", testPublisher.getPubName()))
                 .andDo(print())
                 .andExpect(content().contentType("application/hal+json"))
                 .andExpect((jsonPath("$._embedded.publishers").exists()))
-                .andExpect(jsonPath("$._embedded.publishers[0].pubName").value(testPublisher.getPubName()));
+                .andExpect(jsonPath("$._embedded.publishers[*].pubName").value(testPublisher.getPubName()));
     }
 
     // city does not exists
@@ -110,7 +110,7 @@ public class PublisherApiTest {
                 .andDo(print())
                 .andExpect(content().contentType("application/hal+json"))
                 .andExpect((jsonPath("$._embedded.publishers").exists()))
-                .andExpect(jsonPath("$._embedded.publishers[0].city").value(testPublisher.getCity()));
+                .andExpect(jsonPath("$._embedded.publishers[*].city").value(testPublisher.getCity()));
     }
 
     // city does not exists
@@ -130,7 +130,7 @@ public class PublisherApiTest {
                 .andDo(print())
                 .andExpect(content().contentType("application/hal+json"))
                 .andExpect((jsonPath("$._embedded.publishers").exists()))
-                .andExpect(jsonPath("$._embedded.publishers[0].state").value(testPublisher.getState()));
+                .andExpect(jsonPath("$._embedded.publishers[*].state").value(testPublisher.getState()));
     }
 
     // state does not exists
@@ -150,7 +150,7 @@ public class PublisherApiTest {
                 .andDo(print())
                 .andExpect(content().contentType("application/hal+json"))
                 .andExpect((jsonPath("$._embedded.publishers").exists()))
-                .andExpect(jsonPath("$._embedded.publishers[0].country").value(testPublisher.getCountry()));
+                .andExpect(jsonPath("$._embedded.publishers[*].country").value(testPublisher.getCountry()));
     }
 
     // state does not exists
@@ -163,19 +163,17 @@ public class PublisherApiTest {
                 .andExpect(jsonPath("$._embedded.publishers").isEmpty());
     }
 
-// these is not working as we are using Data rest Api
-    // TODO : validator should be applied so that if the id previously exists it should not update it
-//    @Test
-//    void shouldReturnConflictWhenIdAlreadyExists() throws Exception {
-//        // 1. Setup: Ensure the publisher already exists (or mock it)
-//        String publisherJson = objectMapper.writeValueAsString(testPublisher);
-//
-//        // 2. Action: POST the same entity again
-//        mockMvc.perform(post("/api/publishers")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(publisherJson))
-//                .andExpect(status().isConflict()); // Or .isBadRequest() depending on your logic
-//    }
+    @Test
+    void shouldReturnConflictWhenIdAlreadyExists() throws Exception {
+        // 1. Setup: Ensure the publisher already exists (or mock it)
+        String publisherJson = objectMapper.writeValueAsString(testPublisher);
+
+        // 2. Action: POST the same entity again
+        mockMvc.perform(post("/api/publishers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(publisherJson))
+                .andExpect(status().isConflict()); // Or .isBadRequest() depending on your logic
+    }
 
     @Test
     void shouldUpdateExistingPublisher() throws Exception {
@@ -273,20 +271,20 @@ public class PublisherApiTest {
      */
 
     // TODO : configuration should be done so that if the record is not exist put returns error
-//    @Test
-//    void shouldReturnNotFoundWhenUpdatingNonExistentId() throws Exception {
-//        String nonExistentId = "9900"; // Ensure this isn't in your setup
-//
-//        Publisher updateData = Publisher.builder()
-//                .pubId(nonExistentId)
-//                .pubName("New Name")
-//                .build();
-//
-//        mockMvc.perform(put("/api/publishers/" + nonExistentId)
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsString(updateData)))
-//                .andExpect(status().isNotFound());
-//    }
+    @Test
+    void shouldReturnNotFoundWhenUpdatingNonExistentId() throws Exception {
+        String nonExistentId = "9900"; // Ensure this isn't in your setup
+
+        Publisher updateData = Publisher.builder()
+                .pubId(nonExistentId)
+                .pubName("New Name")
+                .build();
+
+        mockMvc.perform(put("/api/publishers/" + nonExistentId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateData)))
+                .andExpect(status().isNotFound());
+    }
 
     /**
      * TEST: Logic - Default Country assignment
@@ -306,5 +304,63 @@ public class PublisherApiTest {
                         .content(objectMapper.writeValueAsString(publisher)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.country").value("USA"));
+    }
+
+
+    /**
+     * API TEST: Find All Pagination (HAL-JSON)
+     * Verifies that the REST endpoint returns the correct HATEOAS structure and page info.
+     */
+    @Test
+    void shouldReturnHalPagingMetadataForFindAll() throws Exception {
+        // 1. Action: Perform GET request with page parameters
+        mockMvc.perform(get("/api/publishers")
+                        .param("page", "0")
+                        .param("size", "2")
+                        .param("sort", "pubId,asc")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+
+                // 2. Verify Data: Check if the list is inside the '_embedded' field
+                .andExpect(jsonPath("$._embedded.publishers").isArray())
+                .andExpect(jsonPath("$._embedded.publishers.length()").value(2))
+
+                // 3. Verify Metadata: Check the 'page' object
+                .andExpect(jsonPath("$.page.size").value(2))
+                .andExpect(jsonPath("$.page.number").value(0))
+                .andExpect(jsonPath("$.page.totalElements").exists())
+
+                // 4. Verify HATEOAS: Check for navigation links
+                .andExpect(jsonPath("$._links.self").exists())
+                .andExpect(jsonPath("$._links.next").exists()) // Only if total records > 2
+                .andExpect(jsonPath("$._links.last").exists());
+    }
+
+    /**
+     * TEST: Delete Publisher by ID
+     * Verifies that a DELETE request removes the resource and returns 204 No Content.
+     */
+    @Test
+    void shouldDeletePublisherById() throws Exception {
+        // 1. Get the ID of the publisher created in @BeforeEach
+        String id = testPublisher.getPubId();
+
+        // 2. Action: Perform the DELETE request
+        mockMvc.perform(delete("/api/publishers/" + id))
+                .andExpect(status().isNoContent()); // Spring Data REST returns 204
+
+        // 3. Verification: Ensure the resource is actually gone
+        mockMvc.perform(get("/api/publishers/" + id))
+                .andExpect(status().isNotFound()); // Should return 404 now
+    }
+
+    @Test
+    void shouldHideActiveFieldWhenUsingProjection() throws Exception {
+        mockMvc.perform(get("/api/publishers/" + testPublisher.getPubId())
+                        .param("projection", "publisherSummary")) // Force the projection
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pubName").exists())
+                .andExpect(jsonPath("$.active").doesNotExist()) // Verify it's hidden
+                .andExpect(jsonPath("$.isActive").doesNotExist());
     }
 }
