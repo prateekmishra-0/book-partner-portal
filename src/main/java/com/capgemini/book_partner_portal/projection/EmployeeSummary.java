@@ -7,7 +7,6 @@ import org.springframework.data.rest.core.config.Projection;
 @Projection(name = "employeeSummary", types = { Employee.class })
 public interface EmployeeSummary {
 
-    String getEmpId();
     String getFname();
     String getLname();
     Integer getJobLvl();

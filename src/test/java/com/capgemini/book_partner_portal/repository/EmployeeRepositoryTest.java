@@ -41,4 +41,72 @@ public class EmployeeRepositoryTest {
         assertThat(employees).anyMatch(e->e.getEmpId().equals("ABC12345M"));
         assertThat(employees).anyMatch(e->e.getEmpId().equals("XYZ98765F"));
     }
+
+    // --- 1. First Name Search Tests ---
+    @Test
+    public void testFindByFname_WhenValid_ShouldReturnMatch() {
+        // "Clark" was saved in the @BeforeEach setup
+        List<Employee> results = employeeRepository.findByFnameContainingIgnoreCase("cla");
+        assertThat(results).isNotEmpty();
+        // Dynamic check: We don't care about the order, just prove Clark is in the results
+        assertThat(results).anyMatch(e -> e.getFname().equalsIgnoreCase("Clark"));
+    }
+
+    @Test
+    public void testFindByFname_WhenInvalid_ShouldReturnEmptyList() {
+        List<Employee> results = employeeRepository.findByFnameContainingIgnoreCase("Zack");
+        assertThat(results).isEmpty();
+    }
+
+    // --- 2. Last Name Search Tests ---
+    @Test
+    public void testFindByLname_WhenValid_ShouldReturnMatch() {
+        // "Wayne" was saved in the @BeforeEach setup
+        List<Employee> results = employeeRepository.findByLnameContainingIgnoreCase("way");
+        assertThat(results).isNotEmpty();
+        assertThat(results).anyMatch(e -> e.getLname().equalsIgnoreCase("Wayne"));
+    }
+
+    @Test
+    public void testFindByLname_WhenInvalid_ShouldReturnEmptyList() {
+        List<Employee> results = employeeRepository.findByLnameContainingIgnoreCase("Zebra");
+        assertThat(results).isEmpty();
+    }
+
+    // --- 3. Job Level Greater Than Tests ---
+    @Test
+    public void testFindByJobLvlGreaterThan_WhenValid_ShouldReturnMatches() {
+        // Search for > 200. There are several in insertdata.sql (e.g. Philip Cramer is 215)
+        List<Employee> results = employeeRepository.findByJobLvlGreaterThan(200);
+        assertThat(results).isNotEmpty();
+
+        // Dynamic check: Prove that EVERY single employee returned actually has > 200
+        assertThat(results).allMatch(e -> e.getJobLvl() > 200);
+    }
+
+    @Test
+    public void testFindByJobLvlGreaterThan_WhenInvalid_ShouldReturnEmptyList() {
+        // The max_lvl in the 'jobs' table is strictly capped at 250. This must return 0.
+        List<Employee> results = employeeRepository.findByJobLvlGreaterThan(250);
+        assertThat(results).isEmpty();
+    }
+
+    // --- 4. Job Level Less Than Tests ---
+    @Test
+    public void testFindByJobLvlLessThan_WhenValid_ShouldReturnMatches() {
+        // Search for < 50. Helen Bennett has 35, etc.
+        List<Employee> results = employeeRepository.findByJobLvlLessThan(50);
+        assertThat(results).isNotEmpty();
+
+        // Dynamic check: Prove that EVERY single employee returned actually has < 50
+        assertThat(results).allMatch(e -> e.getJobLvl() < 50);
+    }
+
+    @Test
+    public void testFindByJobLvlLessThan_WhenInvalid_ShouldReturnEmptyList() {
+        // The min_lvl in the 'jobs' table is strictly 10. This must return 0.
+        List<Employee> results = employeeRepository.findByJobLvlLessThan(5);
+        assertThat(results).isEmpty();
+    }
+
 }

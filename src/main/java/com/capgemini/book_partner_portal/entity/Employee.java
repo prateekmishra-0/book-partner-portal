@@ -37,10 +37,10 @@ public class Employee {
     private String lname;
 
     @Column(name = "hire_date")
-    private LocalDate hireDate;
+    private LocalDate hireDate = LocalDate.now();
 
     @Column(name = "pub_id")
-    private String pubId;
+    private String pubId = "9952";
 
     @Column(name = "job_lvl")
     @NotNull(message = "Job level is required")
