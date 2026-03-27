@@ -3,6 +3,8 @@ package com.capgemini.book_partner_portal.entity;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -33,7 +35,7 @@ import lombok.ToString;
 public class Author {
 
     @Id
-    @Column(name = "au_id", length = 11)
+    @Column(name = "au_id", length = 11, updatable=false)
     @NotBlank(message = "Author ID is required")
     @Pattern(regexp = "^[0-9]{3}-[0-9]{2}-[0-9]{4}$", message = "Author ID must be in format XXX-XX-XXXX")
     private String auId;
@@ -65,6 +67,7 @@ public class Author {
     @Column(nullable = false)
     private Integer contract;
 
+    @JsonIgnore
     @Builder.Default
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
