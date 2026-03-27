@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -208,5 +209,29 @@ class TitleApiTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(phantomJson))
                 .andExpect(status().isNotFound()); 
+    }
+
+    @Test
+    @DisplayName("Security: POST with isActive=false should be ignored")
+    void insertTitle_WithIsActiveFalse_ShouldIgnoreAndSetTrue() throws Exception {
+        String id = "PC8888";
+        // Hacker tries to create a book that is already "deleted" (soft-delete hack)
+        String maliciousJson = "{" +
+                "\"titleId\": \"" + id + "\"," +
+                "\"title\": \"Hacker's Manual\"," +
+                "\"publisher\": \"/api/publishers/1389\"," +
+                "\"active\": false" + 
+                "}";
+    
+        mockMvc.perform(post("/api/titles")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(maliciousJson))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title", is("Hacker's Manual")));
+    
+        // Verify in DB: The record must be active despite the hacker's JSON
+        Optional<Title> savedBook = titleRepository.findById(id);
+        assertThat(savedBook).isPresent();
+        assertThat(savedBook.get().getIsActive()).isTrue(); // The Shield Worked!
     }
 }
