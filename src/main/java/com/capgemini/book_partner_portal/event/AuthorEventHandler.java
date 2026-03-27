@@ -1,13 +1,15 @@
 package com.capgemini.book_partner_portal.event;
 
-import com.capgemini.book_partner_portal.exception.ResourceAlreadyExistsException;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.rest.core.annotation.HandleBeforeCreate;
 import org.springframework.data.rest.core.annotation.RepositoryEventHandler;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Component;
+
 import com.capgemini.book_partner_portal.entity.Author;
+import com.capgemini.book_partner_portal.exception.ResourceAlreadyExistsException;
 import com.capgemini.book_partner_portal.repository.AuthorRepository;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @Component
 @RepositoryEventHandler
@@ -22,7 +24,7 @@ public class AuthorEventHandler {
     }
 
     @HandleBeforeCreate
-    public void handleEmployeeBeforeCreate(Author author) {
+    public void handleAuthorBeforeCreate(Author author) {
         String incomingId = author.getAuId();
 
         // 1. Defend against POST over-writes (The Upsert Hack)

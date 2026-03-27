@@ -70,7 +70,7 @@ public class AuthorApiTest {
     @Test
     void getAllAuthors_WhenAuthorsExist_ShouldReturnNonEmptyList() throws Exception {
         mockMvc.perform(get("/api/authors"))
-            .andDo(print())
+            // .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$._embedded.authors").isNotEmpty());
     }
@@ -78,7 +78,7 @@ public class AuthorApiTest {
     @Test
     void getAuthorById_WithValidId_ShouldReturn200() throws Exception {
         mockMvc.perform(get("/api/authors/123-45-6789"))
-            .andDo(print())
+            // .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.firstName").value("John"))
             .andExpect(jsonPath("$.lastName").value("Doe"));
@@ -87,7 +87,7 @@ public class AuthorApiTest {
     @Test
     void getAuthorById_WithInvalidId_ShouldReturn404() throws Exception {
         mockMvc.perform(get("/api/authors/999-99-9999"))
-            .andDo(print())
+            // .andDo(print())
             .andExpect(status().isNotFound());
     }
 
@@ -97,7 +97,7 @@ public class AuthorApiTest {
     void getAuthorsByFirstName_WhenFirstNameExists_ShouldReturnNonEmptyList() throws Exception {
         mockMvc.perform(get("/api/authors/search/firstname")
             .param("firstName", "John"))
-            .andDo(print())
+            // .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$._embedded.authors").exists())
             .andExpect(jsonPath("$._embedded.authors").isNotEmpty())
@@ -109,7 +109,7 @@ public class AuthorApiTest {
     void getAuthorsByFirstName_WhenFirstNameNotExists_ShouldReturnEmptyList() throws Exception {
         mockMvc.perform(get("/api/authors/search/firstname")
             .param("firstName", "Ramu"))
-            .andDo(print())
+            // .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$._embedded.authors").exists())
             .andExpect(jsonPath("$._embedded.authors").isEmpty());
@@ -119,7 +119,7 @@ public class AuthorApiTest {
     void getAuthorsByLastName_WhenLastNameExists_ShouldReturnNonEmptyList() throws Exception {
         mockMvc.perform(get("/api/authors/search/lastname")
             .param("lastName", "Doe"))
-            .andDo(print())
+            // .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$._embedded.authors").exists())
             .andExpect(jsonPath("$._embedded.authors").isNotEmpty())
@@ -131,7 +131,7 @@ public class AuthorApiTest {
     void getAuthorsByLastName_WhenLastNameNotExists_ShouldReturnEmptyList() throws Exception {
         mockMvc.perform(get("/api/authors/search/lastname")
             .param("lastName", "Sharma"))
-            .andDo(print())
+            // .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$._embedded.authors").exists())
             .andExpect(jsonPath("$._embedded.authors").isEmpty());
@@ -141,7 +141,7 @@ public class AuthorApiTest {
     void getAuthorsByCity_WhenCityExists_ShouldReturnNonEmptyList() throws Exception {
         mockMvc.perform(get("/api/authors/search/city")
             .param("city", "Berkeley"))
-            .andDo(print())
+            // .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$._embedded.authors").exists())
             .andExpect(jsonPath("$._embedded.authors").isNotEmpty())
@@ -153,7 +153,7 @@ public class AuthorApiTest {
     void getAuthorsByCity_WhenCityNotExists_ShouldReturnEmptyList() throws Exception {
         mockMvc.perform(get("/api/authors/search/city")
             .param("city", "Gondia"))
-            .andDo(print())
+            // .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$._embedded.authors").exists())
             .andExpect(jsonPath("$._embedded.authors").isEmpty());
@@ -181,7 +181,7 @@ public class AuthorApiTest {
         mockMvc.perform(post("/api/authors")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(newAuthorJson)))
-            .andDo(print())
+            // .andDo(print())
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.firstName").value("Alice"))
             .andExpect(jsonPath("$.lastName").value("Smith"));
@@ -196,7 +196,7 @@ public class AuthorApiTest {
         mockMvc.perform(post("/api/authors")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(newAuthorJson)))
-                .andDo(print())
+                // .andDo(print())
             .andExpect(status().isBadRequest());
     }
 
@@ -214,7 +214,7 @@ public class AuthorApiTest {
         mockMvc.perform(post("/api/authors")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(newAuthorJson)))
-                .andDo(print())
+                // .andDo(print())
             .andExpect(status().isBadRequest());
     }
 
@@ -234,7 +234,7 @@ public class AuthorApiTest {
         mockMvc.perform(post("/api/authors")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(newAuthorJson)))
-                .andDo(print())
+                // .andDo(print())
             .andExpect(status().isBadRequest());
     }
 
@@ -252,7 +252,7 @@ public class AuthorApiTest {
         mockMvc.perform(post("/api/authors")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(newAuthorJson)))
-                .andDo(print())
+                // .andDo(print())
             .andExpect(status().isBadRequest());
     }
     
@@ -270,7 +270,7 @@ public class AuthorApiTest {
         mockMvc.perform(post("/api/authors")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(newAuthorJson)))
-                .andDo(print())
+                // .andDo(print())
             .andExpect(status().isBadRequest());
     }
 
@@ -289,7 +289,7 @@ public class AuthorApiTest {
         mockMvc.perform(post("/api/authors")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(newAuthorJson)))
-                .andDo(print())
+                // .andDo(print())
             .andExpect(status().isBadRequest());
     }
 
@@ -310,7 +310,7 @@ public class AuthorApiTest {
         mockMvc.perform(post("/api/authors")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(duplicateAuthor)))
-                .andDo(print())
+                // .andDo(print())
                 .andExpect(status().isConflict());
     }
 
