@@ -11,10 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -230,5 +227,26 @@ public class StoreApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.storName").value("Updated Barnum Shop"))
                 .andExpect(jsonPath("$.state").value("CA"));
+    }
+
+    // ------------------- DELETE APIs -------------------
+
+    @Test
+    void deleteStore_WithValidId_ShouldReturn204AndHideRecord() throws Exception {
+        String storeId = "7131";
+
+        mockMvc.perform(delete("/api/stores/" + storeId))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/stores/" + storeId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteStore_WithInvalidId_ShouldReturn404() throws Exception {
+        String ghostId = "9999";
+
+        mockMvc.perform(delete("/api/stores/" + ghostId))
+                .andExpect(status().isNotFound()); // GlobalExceptionHandler handles this
     }
 }

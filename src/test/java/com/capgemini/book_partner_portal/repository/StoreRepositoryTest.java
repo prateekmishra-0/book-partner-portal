@@ -87,7 +87,7 @@ public class StoreRepositoryTest {
     // Test: Create/Insert Store
     @Test
     void save_WhenValidStore_ShouldPersistInDb() {
-        Store newStore = new Store("9920", "Test Store", "123 Road", "Nagpur", "MH", "44001");
+        Store newStore = new Store("9920", "Test Store", "123 Road", "Nagpur", "MH", "44001",true);
 
         storeRepository.save(newStore);
 
@@ -109,5 +109,17 @@ public class StoreRepositoryTest {
         storeRepository.save(store);
 
         assertEquals("Updated Name", storeRepository.findById("7066").get().getStorName());
+    }
+
+    //Test: Delete Store
+    @Test
+    void deleteStore_ShouldPerformSoftDelete_AndHideFromRepository() {
+        String idToDelete = "7066";
+
+        storeRepository.deleteById(idToDelete);
+
+        Optional<Store> deletedStore = storeRepository.findById(idToDelete);
+
+        assertFalse(deletedStore.isPresent());
     }
 }
