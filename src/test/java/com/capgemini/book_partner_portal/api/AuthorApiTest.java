@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -147,5 +148,156 @@ public class AuthorApiTest {
 
 
 
+    // ---------------------------------- POST APIs ----------------------------------------------
 
+    @Test
+    void createAuthor_WithValidData_ShouldReturn201() throws Exception {
+        String newAuthorJson = """
+            {
+                "auId": "987-65-4321",
+                "firstName": "Alice",
+                "lastName": "Smith",
+                "phone": "415 123-8585",
+                "address": "Street 1",
+                "city": "Oakland",
+                "state": "CA",
+                "zip": "94618",
+                "contract": 1
+            }
+        """;
+
+        mockMvc.perform(post("/api/authors")
+                .contentType("application/json")
+                .content(newAuthorJson))
+            .andDo(print())
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.firstName").value("Alice"))
+            .andExpect(jsonPath("$.lastName").value("Smith"));
+    }
+
+    @Test
+    void createAuthor_WithMissingFields_ShouldReturn400() throws Exception {
+        String json = """
+            {
+                "auId": "111-11-1111"
+            }
+        """;
+
+        mockMvc.perform(post("/api/authors")
+                .contentType("application/json")
+                .content(json))
+                .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
+    // create author with invalid id format
+    @Test
+    void createAuthor_WithInvalidIdFormat_ShouldReturn400() throws Exception {
+        String json = """
+            {
+                "auId": "111111111",
+                "firstName": "John",
+                "lastName": "Doe",
+                "contract": 1
+            }
+        """;
+
+        mockMvc.perform(post("/api/authors")
+                .contentType("application/json")
+                .content(json))
+                .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
+    
+    // create author with null firstName and null lastName 
+    @Test
+    void createAuthor_WithNullFirstNameAndLastName_ShouldReturn400() throws Exception {
+        String json = """
+            {
+                "auId": "111111111",
+                "firstName": "",
+                "lastName": "",
+                "contract": 1
+            }
+        """;
+
+        mockMvc.perform(post("/api/authors")
+                .contentType("application/json")
+                .content(json))
+                .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
+
+    // create author with Null contract
+    @Test
+    void createAuthor_WithNullContract_ShouldReturn400() throws Exception {
+        String json = """
+            {
+                "auId": "111-11-1111",
+                "firstName": "John",
+                "lastName": "Doe"
+
+            }
+        """;
+
+        mockMvc.perform(post("/api/authors")
+                .contentType("application/json")
+                .content(json))
+                .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+    
+    // create author with invalid zip
+    @Test
+    void createAuthor_WithInvalidZipcode_ShouldReturn400() throws Exception {
+        String json = """
+            {
+                "auId": "111-11-1111",
+                "firstName": "John",
+                "lastName": "Doe",
+                "contract":1,
+                "zip":"999"
+
+            }
+        """;
+
+        mockMvc.perform(post("/api/authors")
+                .contentType("application/json")
+                .content(json))
+                .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
+
+
+    // create author with duplicate id
+
+    // @Test
+    // void createAuthor_WithDuplicateId_ShouldReturn409() throws Exception {
+    //     String json = """
+    //         {
+    //             "auId": "111-11-1111",
+    //             "firstName": "John",
+    //             "lastName": "Doe",
+    //             "contract": 1
+    //         }
+    //     """;
+
+    //     // 1. Send the first request to create the author successfully
+    //     mockMvc.perform(post("/api/authors")
+    //             .contentType("application/json")
+    //             .content(json))
+    //             .andExpect(status().isCreated()); 
+
+
+    //     mockMvc.perform(post("/api/authors")
+    //             .contentType("application/json")
+    //             .content(json))
+    //             .andDo(print())
+    //             .andExpect(status().isConflict())
+    //             .andExpect(jsonPath("$.error").exists());
+                
+    // }
 }

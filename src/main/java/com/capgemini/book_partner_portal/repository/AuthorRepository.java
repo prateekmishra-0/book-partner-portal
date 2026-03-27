@@ -7,7 +7,7 @@ import org.springframework.data.rest.core.annotation.RestResource;
 
 import com.capgemini.book_partner_portal.entity.Author;
 
-@RepositoryRestResource
+@RepositoryRestResource(path="authors")
 public interface AuthorRepository extends JpaRepository<Author, String> {
 
     @RestResource(path="firstname")

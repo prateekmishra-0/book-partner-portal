@@ -1,8 +1,13 @@
 package com.capgemini.book_partner_portal.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import com.capgemini.book_partner_portal.entity.Author;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolationException;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -139,9 +145,126 @@ public class AuthorRepositoryTest {
     }
 
 
+    // create author with valid data
+    @Test
+    void createAuthor_WithValidData_ShouldCreateAuthor() {
+        
+        Author newAuthor = new Author(
+            "987-65-4321",
+            "Smith",
+            "Alice",
+            "415 123-8585",
+            "Street 1",
+            "Oakland",
+            "CA",
+            "94618",
+            1
+        );
+
+        Author savedAuthor = authorRepository.save(newAuthor);
+
+        // Assertions
+        assertNotNull(savedAuthor);
+        assertEquals("987-65-4321", savedAuthor.getAuId());
+        assertEquals("Alice", savedAuthor.getFirstName());
+        assertEquals("Smith", savedAuthor.getLastName());
+
+        // verify from DB
+        Optional<Author> fetched = authorRepository.findById("987-65-4321");
+        assertTrue(fetched.isPresent());
+    }
+
+
+    // create author with invalid id
+    @Test
+    void createAuthor_WithInvalidId_ShouldThrowConstraintViolationException() {
+
+        Author invalidAuthor = new Author(
+            "12311",  // invalid ID
+            "Smith",
+            "Alice",
+            "415 123-8585",
+            "Street 1",
+            "Oakland",
+            "CA",
+            "94618",
+            1
+        );
+
+        assertThrows(ConstraintViolationException.class, () -> {
+            authorRepository.saveAndFlush(invalidAuthor);
+        });
+    }
+
+
+    // create author with null contract
+    @Test
+    void createAuthor_WithNullContract_ShouldThrowJpaSystemException() {
+
+        Author invalidAuthor = new Author(
+            "111-11-1111", 
+            "Smith",
+            "Alice",
+            "415 123-8585",
+            "Street 1",
+            "Oakland",
+            "CA",
+            "94618",
+            null
+        );
+
+        assertThrows(ConstraintViolationException.class, () -> {
+            authorRepository.saveAndFlush(invalidAuthor);
+        });
+    }
+
+    // create author with invalid zip
+    @Test
+    void createAuthor_WithInvalidZip_ShouldThrowJpaSystemException() {
+
+        Author invalidAuthor = new Author(
+            "111-11-1111", 
+            "Smith",
+            "Alice",
+            "415 123-8585",
+            "Street 1",
+            "Oakland",
+            "CA",
+            "11",
+            1
+        );
+
+        assertThrows(ConstraintViolationException.class, () -> {
+            authorRepository.saveAndFlush(invalidAuthor);
+        });
+    }
 
 
 
 
-    
+    // create author with valid zipcode 
+    // @Test
+    // void createAuthor_WithDuplicateId_ShouldThrowDataIntegrityViolationException() {
+
+    //     // This ID already exists from @BeforeEach
+    //     Author duplicateAuthor = new Author(
+    //         "123-45-6789", 
+    //         "Smith",
+    //         "Alice",
+    //         "415 123-8585",
+    //         "Street 1",
+    //         "Oakland",
+    //         "CA",
+    //         "94618",
+    //         1
+    //     );
+
+    //     DataIntegrityViolationException exception =
+    //         assertThrows(DataIntegrityViolationException.class, () -> {
+    //             authorRepository.saveAndFlush(duplicateAuthor);
+    //         });
+
+    //     assertNotNull(exception);
+    // }
+
 }
