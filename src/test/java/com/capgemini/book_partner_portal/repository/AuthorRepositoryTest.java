@@ -31,17 +31,18 @@ public class AuthorRepositoryTest {
 
     @BeforeEach
     void setup() {
-        testAuthor = new Author(
-            "123-45-6789", 
-            "Doe", 
-            "John", 
-            "415 658-9932", 
-            "6223 Bateman St.", 
-            "Berkeley", 
-            "CA", 
-            "94705", 
-            1
-        );
+        testAuthor = Author.builder()
+            .auId("123-45-6789")
+            .firstName("John")
+            .lastName("Doe")
+            .phone("415 658-9932")
+            .address("6223 Bateman St.")
+            .city("Berkeley")
+            .state("CA")
+            .zip("94705")
+            .contract(1)
+            .build();
+
 
         authorRepository.save(testAuthor);
     }
@@ -149,17 +150,18 @@ public class AuthorRepositoryTest {
     @Test
     void createAuthor_WithValidData_ShouldCreateAuthor() {
         
-        Author newAuthor = new Author(
-            "987-65-4321",
-            "Smith",
-            "Alice",
-            "415 123-8585",
-            "Street 1",
-            "Oakland",
-            "CA",
-            "94618",
-            1
-        );
+        Author newAuthor = Author.builder()
+                    .auId("987-65-4321")
+                    .firstName("Alice")
+                    .lastName("Smith")
+                    .phone("415 123-8585")
+                    .address("Street 1")
+                    .city("Oakland")
+                    .state("CA")
+                    .zip("94681")
+                    .contract(1)
+                    .build();
+
 
         Author savedAuthor = authorRepository.save(newAuthor);
 
@@ -179,17 +181,18 @@ public class AuthorRepositoryTest {
     @Test
     void createAuthor_WithInvalidId_ShouldThrowConstraintViolationException() {
 
-        Author invalidAuthor = new Author(
-            "12311",  // invalid ID
-            "Smith",
-            "Alice",
-            "415 123-8585",
-            "Street 1",
-            "Oakland",
-            "CA",
-            "94618",
-            1
-        );
+
+        Author invalidAuthor = Author.builder()
+            .auId("12311")
+            .firstName("Alice")
+            .lastName("Smith")
+            .phone("415 123-8585")
+            .address("Street 1")
+            .city("Oakland")
+            .state("CA")
+            .zip("94681")
+            .contract(1)
+            .build();
 
         assertThrows(ConstraintViolationException.class, () -> {
             authorRepository.saveAndFlush(invalidAuthor);
@@ -200,18 +203,18 @@ public class AuthorRepositoryTest {
     // create author with null contract
     @Test
     void createAuthor_WithNullContract_ShouldThrowJpaSystemException() {
-
-        Author invalidAuthor = new Author(
-            "111-11-1111", 
-            "Smith",
-            "Alice",
-            "415 123-8585",
-            "Street 1",
-            "Oakland",
-            "CA",
-            "94618",
-            null
-        );
+        
+        Author invalidAuthor = Author.builder()
+            .auId("987-65-4321")
+            .firstName("Alice")
+            .lastName("Smith")
+            .phone("415 123-8585")
+            .address("Street 1")
+            .city("Oakland")
+            .state("CA")
+            .zip("94681")
+            .contract(null)
+            .build();
 
         assertThrows(ConstraintViolationException.class, () -> {
             authorRepository.saveAndFlush(invalidAuthor);
@@ -220,51 +223,26 @@ public class AuthorRepositoryTest {
 
     // create author with invalid zip
     @Test
-    void createAuthor_WithInvalidZip_ShouldThrowJpaSystemException() {
+    void createAuthor_WithInvalidZip_ShouldThrowConstraintViolationException() {
 
-        Author invalidAuthor = new Author(
-            "111-11-1111", 
-            "Smith",
-            "Alice",
-            "415 123-8585",
-            "Street 1",
-            "Oakland",
-            "CA",
-            "11",
-            1
-        );
+        Author invalidAuthor = Author.builder()
+            .auId("111-11-1111")
+            .firstName("Alice")
+            .lastName("Smith")
+            .phone("415 123-8585")
+            .address("Street 1")
+            .city("Oakland")
+            .state("CA")
+            .zip("11")
+            .contract(1)
+            .build();
+
+        
 
         assertThrows(ConstraintViolationException.class, () -> {
             authorRepository.saveAndFlush(invalidAuthor);
         });
     }
 
-
-
-
-    // create author with valid zipcode 
-    // @Test
-    // void createAuthor_WithDuplicateId_ShouldThrowDataIntegrityViolationException() {
-
-    //     // This ID already exists from @BeforeEach
-    //     Author duplicateAuthor = new Author(
-    //         "123-45-6789", 
-    //         "Smith",
-    //         "Alice",
-    //         "415 123-8585",
-    //         "Street 1",
-    //         "Oakland",
-    //         "CA",
-    //         "94618",
-    //         1
-    //     );
-
-    //     DataIntegrityViolationException exception =
-    //         assertThrows(DataIntegrityViolationException.class, () -> {
-    //             authorRepository.saveAndFlush(duplicateAuthor);
-    //         });
-
-    //     assertNotNull(exception);
-    // }
 
 }
