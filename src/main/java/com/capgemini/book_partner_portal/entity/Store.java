@@ -6,11 +6,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "stores") // Matches the DB table name
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Store {
     @Id
     @NotNull(message = "Store ID is required")
