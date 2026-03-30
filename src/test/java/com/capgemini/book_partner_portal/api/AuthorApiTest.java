@@ -2,6 +2,7 @@ package com.capgemini.book_partner_portal.api;
 
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsStringIgnoringCase;
 import static org.hamcrest.Matchers.everyItem;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,7 +71,7 @@ public class AuthorApiTest {
     @Test
     void getAllAuthors_WhenAuthorsExist_ShouldReturnNonEmptyList() throws Exception {
         mockMvc.perform(get("/api/authors"))
-            // .andDo(print())
+            .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$._embedded.authors").isNotEmpty());
     }
@@ -340,11 +341,41 @@ public class AuthorApiTest {
                 .andExpect(jsonPath("$.lastName").value("UpdatedLast"));
             }
             
-            
+    @Test
+    void phantomInsertDefense_WithNonExistentId_ShouldReturn404() throws Exception {
+        // Attempting to PUT (Update) an ID that does not exist should not create a new record
+        Author ghostAuthor = Author.builder()
+                                .auId("999-00-9999")
+                                .firstName("Ghost")
+                                .lastName("User")
+                                .contract(1)
+                                .build();
+        
+        mockMvc.perform(put("/api/authors/999-00-9999")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(ghostAuthor)))
+            .andExpect(status().isNotFound());
+    }   
+
+
+    @Test
+    void invisibleShield_PostWithIsActiveFalse_ShouldBeIgnored() throws Exception {
+        // Passing isActive: false in JSON should be ignored by @JsonIgnore/EventHandler
+        String jsonWithExploit = "{\"auId\":\"111-22-3333\",\"firstName\":\"Sec\",\"lastName\":\"User\",\"contract\":1,\"isActive\":false}";
+
+        mockMvc.perform(post("/api/authors")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonWithExploit))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.isActive").doesNotExist()); // Verify field is not in response
+
+            Author saved = authorRepository.findById("111-22-3333").orElseThrow();
+            assertThat(saved.getIsActive()).isTrue();
+    }
             
     // ---------------------------------- PATCH APIs Tests ----------------------------------------------
 
-    // path Author with valid id and fields
+    // patch Author with valid id and fields
     @Test
     void patchAuthor_WithValidFields_ShouldReturn200() throws Exception {
         Map<String, Object> updates = Map.of(
@@ -361,7 +392,7 @@ public class AuthorApiTest {
             .andExpect(jsonPath("$.lastName").value("UpdatedLast"));
     }
 
-    // path Author with invalid fields
+    // patch Author with invalid fields
     @Test
     void patchAuthor_WithInvalidFields_ShouldReturn400() throws Exception {
         Map<String, Object> updates = Map.of(
@@ -408,6 +439,15 @@ public class AuthorApiTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void deleteAuthor_WithInvalidId_ShouldReturn404() throws Exception {
+
+        String nonExistentId = "999-99-9999";
+
+        mockMvc.perform(delete("/api/authors/{id}", nonExistentId))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
 
 
     // ---------------------------------- Pagination APIs Tests ----------------------------------------------
@@ -476,13 +516,42 @@ public class AuthorApiTest {
             .andExpect(jsonPath("$._embedded.authors[0].contract").doesNotExist());
     }
 
+
+
+    // ---------------------------------- Mapping Tests ----------------------------------------------
+
+
     @Test
-    void getTitlesAuthor_ShouldReturnTitlesList() throws Exception {
-        mockMvc.perform(get("/api/titleAuthors/search/byAuthor").param("auId", "724-80-9391"))
+    void getTitlesAuthor_WithValidId_ShouldReturnTitlesList() throws Exception {
+        mockMvc.perform(get("/api/titleAuthors/search/byAuthor")
+        .param("auId", "724-80-9391"))
         .andDo(print())
         .andExpect(status().isOk())
         .andExpect(jsonPath("$._embedded.titleAuthors").isArray());
     }
 
+
+    @Test
+    void getTitlesAuthor_WithInvalidId_ShouldReturnEmptyList() throws Exception {
+        // We pass an ID that definitely does not exist in the database
+        mockMvc.perform(get("/api/titleAuthors/search/byAuthor")
+                .param("auId", "000-00-0000")) 
+            .andDo(print())
+            .andExpect(status().isOk()) 
+            .andExpect(jsonPath("$._embedded.titleAuthors").exists())
+            .andExpect(jsonPath("$._embedded.titleAuthors").isEmpty());
+    }
+
+    @Test
+    void getTitlesAuthor_Mapping_ShouldReturnCorrectFields() throws Exception {
+        // 1. Ensure the record from @BeforeEach is linked to a book
+        // 2. Verify the JSON contains the specific fields from your Projection
+        mockMvc.perform(get("/api/titleAuthors/search/byAuthor")
+            .param("auId", "724-80-9391")) // Use the ID from your setup
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$._embedded.titleAuthors[0].bookTitle").exists())
+            .andExpect(jsonPath("$._embedded.titleAuthors[0].publisherName").exists())
+            .andExpect(jsonPath("$._embedded.titleAuthors[0].royaltyPer").exists());
+    }
 
 }

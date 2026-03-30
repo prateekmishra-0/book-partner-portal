@@ -1,15 +1,19 @@
 package com.capgemini.book_partner_portal.repository;
 
 import com.capgemini.book_partner_portal.entity.Employee;
+import com.capgemini.book_partner_portal.entity.Job;
+import com.capgemini.book_partner_portal.entity.Publisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -21,6 +25,9 @@ public class EmployeeRepositoryTest {
     @Autowired
     private EmployeeRepository employeeRepository;
 
+    @Autowired
+    private TestEntityManager entityManager;
+
     @BeforeEach
     public void setUp() {
         // Using strict schema data:
@@ -28,6 +35,11 @@ public class EmployeeRepositoryTest {
         // 2. pub_id uses actual IDs from the publishers table ("0877" and "1389")
         employeeRepository.save(new Employee("ABC12345M", "Clark", "Kent", LocalDate.now(), "0877", 10, true));
         employeeRepository.save(new Employee("XYZ98765F", "Bruce", "Wayne", LocalDate.now(), "1389", 10, true));
+
+        // CRITICAL FIX: Force Hibernate to sync with the database and wipe its cache.
+        // This guarantees the tests fetch fresh objects with fully loaded relationships!
+        entityManager.flush();
+        entityManager.clear();
     }
 
     // STRICTLY testing only the findAll() method currently used by the API
@@ -107,6 +119,43 @@ public class EmployeeRepositoryTest {
         // The min_lvl in the 'jobs' table is strictly 10. This must return 0.
         List<Employee> results = employeeRepository.findByJobLvlLessThan(5);
         assertThat(results).isEmpty();
+    }
+
+    // =================================================================
+    // --- Phase 3: Relationship Mapping Tests ---
+    // =================================================================
+
+    @Test
+    public void testEmployeeToJobRelationship_ShouldLoadJobData() {
+        // Goal: Prove that fetching an employee correctly lazy-loads their Job entity.
+
+        // Fetch Clark Kent (ABC12345M) saved in the @BeforeEach block
+        Optional<Employee> employee = employeeRepository.findById("ABC12345M");
+        assertThat(employee).isPresent();
+
+        // Because of FetchType.LAZY, calling .getJob() inside this @Transactional test
+        // will trigger Hibernate to fetch the Job record.
+        Job linkedJob = employee.get().getJob();
+
+        assertThat(linkedJob).isNotNull();
+        // Since we didn't specify a jobId in the custom constructor, it defaults to 1.
+        // Job ID 1 is "New Hire - Job not specified" in your insertdata.sql
+        assertThat(linkedJob.getJobDesc()).isEqualTo("New Hire - Job not specified");
+    }
+
+    @Test
+    public void testEmployeeToPublisherRelationship_ShouldLoadPublisherData() {
+        // Goal: Prove that fetching an employee correctly lazy-loads their Publisher entity.
+
+        // Fetch Bruce Wayne (XYZ98765F) who was explicitly assigned pubId "1389" in @BeforeEach
+        Optional<Employee> employee = employeeRepository.findById("XYZ98765F");
+        assertThat(employee).isPresent();
+
+        Publisher linkedPublisher = employee.get().getPublisher();
+
+        assertThat(linkedPublisher).isNotNull();
+        // pubId "1389" is strictly tied to "Algodata Infosystems" in insertdata.sql
+        assertThat(linkedPublisher.getPubName()).isEqualTo("Algodata Infosystems");
     }
 
 }

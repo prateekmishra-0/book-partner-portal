@@ -425,4 +425,38 @@ public class EmployeeApiIntegrationTest {
                 .andExpect(status().isNotFound()); // HTTP 404 Not Found from our Event Handler!
     }
 
+
+    // =================================================================
+    // --- Phase 4: The Page 3 Detailed Projection Test ---
+    // =================================================================
+
+    @Test
+    public void testGetEmployeeDetail_WithProjection_ShouldReturnNestedData() throws Exception {
+        // Goal: Call GET /api/employees/{id}?projection=employeeDetail
+        // Prove that Spring Data REST successfully executes the JOINs and formats the JSON
+        // exactly as defined in the EmployeeDetailProjection interface.
+
+        mockMvc.perform(get("/api/employees/PTC11962M?projection=employeeDetail"))
+                .andExpect(status().isOk())
+
+                // 1. Verify standard employee fields
+                .andExpect(jsonPath("$.fname", is("Philip")))
+                .andExpect(jsonPath("$.lname", is("Cramer")))
+                .andExpect(jsonPath("$.jobLvl", is(215)))
+
+                // 2. Verify Nested Job View (The JOIN worked!)
+                .andExpect(jsonPath("$.job").exists())
+                .andExpect(jsonPath("$.job.jobDesc", is("Chief Executive Officer")))
+
+                // 3. Verify Nested Publisher View (The JOIN worked!)
+                .andExpect(jsonPath("$.publisher").exists())
+                .andExpect(jsonPath("$.publisher.pubName", is("Scootney Books")))
+
+                // 4. THE INVISIBLE SHIELD: Prove the projection hides internal fields
+                .andExpect(jsonPath("$.empId").doesNotExist())     // Base Entity hidden
+                .andExpect(jsonPath("$.isActive").doesNotExist())  // Base Entity hidden
+                .andExpect(jsonPath("$.job.minLvl").doesNotExist()) // Nested Job Entity hidden
+                .andExpect(jsonPath("$.publisher.city").doesNotExist()); // Nested Publisher Entity hidden
+    }
+
 }

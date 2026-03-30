@@ -1,8 +1,12 @@
 package com.capgemini.book_partner_portal.repository;
 
 import com.capgemini.book_partner_portal.BookPartnerPortalApplication;
+import com.capgemini.book_partner_portal.entity.Author;
 import com.capgemini.book_partner_portal.entity.Publisher;
 import com.capgemini.book_partner_portal.entity.Title;
+import com.capgemini.book_partner_portal.entity.TitleAuthor;
+import com.capgemini.book_partner_portal.entity.TitleAuthorId;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,43 +34,46 @@ class TitleRepositoryTest {
     private PublisherRepository publisherRepository;
 
     @Autowired
+    private AuthorRepository authorRepository;
+
+    @Autowired
+    private TitleAuthorRepository titleAuthorRepository;
+
+    @Autowired
     private TestEntityManager entityManager;
 
     @BeforeEach
     void setUp() {
-        // Cleanup to avoid "Duplicate Entry" errors in real MySQL DB
-        if (titleRepository.existsById("BU1332")) {
-            titleRepository.deleteById("BU1332");
+        titleRepository.findById("BU1332").ifPresent(t -> {
+            titleRepository.delete(t); 
             entityManager.flush();
-        }
+        });
 
-        // 1. Setup Publisher (Check first to avoid duplicate)
-        Publisher pub;
+        // 1. Setup Publisher
         if (!publisherRepository.existsById("1389")) {
-            pub = new Publisher("1389", "Algodata Infosystems", "Berkeley", "CA", "USA",true);
+            Publisher pub = new Publisher("1389", "Algodata Infosystems", "Berkeley", "CA", "USA", true);
             publisherRepository.save(pub);
-        } else {
-            pub = publisherRepository.findById("1389").get();
         }
 
-        // 2. Setup Base Title "The Good Book"
+        // 2. Setup Base Title
         Title book = new Title();
         book.setTitleId("BU1332");
         book.setTitle("The Good Book");
-        book.setPublisher(pub);
+        
+        //  Use the pubId string, not the object, because the object is Read-Only
+        book.setPubId("1389"); 
+        
         book.setType("philosophy");
         book.setPrice(19.99);
-        book.setPubdate(LocalDateTime.now());
-        book.setIsActive(true);
+        book.setPubdate(LocalDateTime.of(2026, 3, 1, 10, 0)); // Fixed date for testing
+        book.setIsActive(true); //  Check if this should be setActive(true)
         
         titleRepository.save(book);
-        
-        // Sync with DB
         entityManager.flush();
         entityManager.clear();
     }
 
-    // --- ADD TEST (Gave it back!) ---
+    // --- ADD TEST ---
     @Test
     @DisplayName("Repo: Add New Title with Relationship")
     void testAddNewTitle() {
@@ -95,7 +102,59 @@ class TitleRepositoryTest {
         assertThat(fetched.get().getTitle()).isEqualTo("Spring Boot Pro Guide");
     }
 
-    // --- Basic CRUD Tests ---
+    @Test
+    @DisplayName("Repo: Multi-Author Selection and Retrieval")
+    void testMultiAuthorLinkingAndRetrieval() {
+        // 1. Prepare Authors (Simulating the list available in your frontend dropdown)
+        Author authorA = Author.builder()
+                .auId("111-22-3333").firstName("Alice").lastName("Alpha")
+                .contract(1).isActive(true).build();
+        Author authorB = Author.builder()
+                .auId("444-55-6666").firstName("Bob").lastName("Beta")
+                .contract(1).isActive(true).build();
+        
+        authorRepository.saveAll(List.of(authorA, authorB));
+
+        // 2. Fetch the Title created in setUp()
+        Title book = titleRepository.findById("BU1332").get();
+
+        // 3. Create "TitleAuthor" links (Simulating the frontend saving the selection)
+        // Link Author A as Primary (Order 1)
+        TitleAuthor link1 = new TitleAuthor(
+            new TitleAuthorId(authorA.getAuId(), book.getTitleId()), 
+            authorA, book, (byte) 1, 60
+        );
+        // Link Author B as Secondary (Order 2)
+        TitleAuthor link2 = new TitleAuthor(
+            new TitleAuthorId(authorB.getAuId(), book.getTitleId()), 
+            authorB, book, (byte) 2, 40
+        );
+
+        titleAuthorRepository.saveAll(List.of(link1, link2));
+        entityManager.flush();
+        entityManager.clear();
+
+        // 4. TEST: Retrieve authors by Title ID (The specific requirement)
+        List<TitleAuthor> authorshipList = titleAuthorRepository.findById_TitleId("BU1332");
+
+        // Verify counts and data integrity
+        assertThat(authorshipList).hasSize(2);
+        
+        // Verify we can see Author names through the join table
+        List<String> names = authorshipList.stream()
+                .map(ta -> ta.getAuthor().getFirstName())
+                .toList();
+        
+        assertThat(names).containsExactlyInAnyOrder("Alice", "Bob");
+
+        // Verify the order and royalties are correct
+        TitleAuthor primary = authorshipList.stream()
+                .filter(ta -> ta.getAuOrd() == 1)
+                .findFirst().get();
+        assertThat(primary.getAuthor().getLastName()).isEqualTo("Alpha");
+        assertThat(primary.getRoyaltyPer()).isEqualTo(60);
+    }
+
     @Test
     void testFindAll() {
         List<Title> titles = titleRepository.findAll();
@@ -151,18 +210,39 @@ class TitleRepositoryTest {
         assertThat(results).anyMatch(t -> t.getTitleId().equals("BU1332") && t.getPrice() == 19.99);
     }
 
-    // --- Soft Delete Test ---
     @Test
-    @DisplayName("Repo: Soft Delete Logic (Check Hidden)")
-    void testSoftDelete_Logic() {
+    @DisplayName("Repo Security: pubdate and titleId are Immutable")
+    void testImmutableFields_Logic() {
         Title book = titleRepository.findById("BU1332").get();
-        book.setIsActive(false);
-        titleRepository.save(book);
+        LocalDateTime originalDate = book.getPubdate();
 
-        // Force Hibernate to check DB @Where filter
+        // Attempt to change immutable fields
+        book.setPubdate(LocalDateTime.now().plusDays(10)); 
+        book.setPrice(55.55); // Change a mutable field to trigger update
+        
+        titleRepository.save(book);
         entityManager.flush();
         entityManager.clear();
 
+        Title updated = titleRepository.findById("BU1332").get();
+        
+        // Verify: Price updated, but pubdate remained the same!
+        assertThat(updated.getPrice()).isEqualTo(55.55);
+        assertThat(updated.getPubdate()).isEqualTo(originalDate); 
+    }
+
+    // --- Soft Delete Test ---
+    @Test
+    @DisplayName("Repo: Soft Delete Logic (Check SQLRestriction)")
+    void testSoftDelete_Logic() {
+        Title book = titleRepository.findById("BU1332").get();
+        book.setIsActive(false); // Trigger @SQLDelete
+        titleRepository.save(book);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        // 🚨 Because of @SQLRestriction("is_active = true"), findById returns empty
         Optional<Title> deletedBook = titleRepository.findById("BU1332");
         assertThat(deletedBook).isEmpty();
     }
@@ -178,4 +258,6 @@ class TitleRepositoryTest {
         assertThat(updated.getPrice()).isEqualTo(99.99);
         assertThat(updated.getTitle()).isEqualTo("The Good Book"); // Title should remain same
     }
+
+    
 }

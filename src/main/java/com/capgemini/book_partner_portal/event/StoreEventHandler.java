@@ -5,6 +5,7 @@ import com.capgemini.book_partner_portal.exception.ResourceAlreadyExistsExceptio
 import com.capgemini.book_partner_portal.repository.StoreRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.rest.core.annotation.HandleBeforeCreate;
+import org.springframework.data.rest.core.annotation.HandleBeforeSave;
 import org.springframework.data.rest.core.annotation.RepositoryEventHandler;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Component;
@@ -32,11 +33,6 @@ public class StoreEventHandler {
             if (incomingId != null && storeRepository.existsById(incomingId)) {
                 throw new ResourceAlreadyExistsException("Cannot create: A store with ID '" + incomingId + "' already exists.");
             }
-
-            // Soft delete safety: new store should be active always
-            if (store.getIsActive() == null) {
-                store.setIsActive(true);
-            }
         }
 
         // if put/patch and id is not there-> 404 not found
@@ -44,6 +40,19 @@ public class StoreEventHandler {
             if (incomingId != null && !storeRepository.existsById(incomingId)) {
                 throw new ResourceNotFoundException("Cannot update: Store with ID '" + incomingId + "' does not exist.");
             }
+        }
+        // The API Safety Bouncer
+        store.setIsActive(true);
+    }
+
+    /**
+     * Fires before UPDATE — triggered by PUT and PATCH to an existing resource.
+     */
+    @HandleBeforeSave
+    public void handleStoreBeforeSave(Store store) {
+        // PATCH Null-Safety to protect the soft delete constraint
+        if (store.getIsActive() == null) {
+            store.setIsActive(true);
         }
     }
 }

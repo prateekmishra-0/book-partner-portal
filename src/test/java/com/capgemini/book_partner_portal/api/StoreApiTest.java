@@ -298,4 +298,21 @@ public class StoreApiTest {
         mockMvc.perform(delete("/api/stores/" + ghostId))
                 .andExpect(status().isNotFound()); // GlobalExceptionHandler handles this
     }
+
+    // --- PROJECTION SECURITY ---
+
+    @Test
+    void getStoreById_WithStoreSummaryProjection_ShouldHideInternalId() throws Exception {
+        // Goal: Prove that applying the storeSummary projection explicitly hides
+        // the raw Database ID and internal security flags from the frontend payload.
+
+        mockMvc.perform(get("/api/stores/7066?projection=storeSummary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.storName").value("Barnum's"))
+                .andExpect(jsonPath("$.city").value("Tustin"))
+
+                // CRITICAL LEAK CHECK: Prove raw DB ID and isActive flag are hidden
+                .andExpect(jsonPath("$.storId").doesNotExist())
+                .andExpect(jsonPath("$.isActive").doesNotExist());
+    }
 }
