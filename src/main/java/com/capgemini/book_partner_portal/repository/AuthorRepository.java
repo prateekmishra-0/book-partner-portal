@@ -12,20 +12,23 @@ import com.capgemini.book_partner_portal.projection.AuthorListProjection;
 @RepositoryRestResource(collectionResourceRel = "authors", path = "authors", excerptProjection = AuthorListProjection.class)
 public interface AuthorRepository extends JpaRepository<Author, String> {
 
-    @RestResource(path="firstname")
+    @RestResource(path="firstname",rel="by-firstname")
     List<Author> findByFirstNameContainingIgnoreCase(String firstName);
     
-    @RestResource(path="lastname")
+    @RestResource(path="lastname",rel="by-lastname")
     List<Author> findByLastNameContainingIgnoreCase(String lastName);
 
-    @RestResource(path="city")
+    @RestResource(path="city",rel="by-city")
     List<Author> findByCityIgnoreCase(String city);
 
-    @RestResource(path="phone")
+    @RestResource(path="phone",rel="by-phone")
     List<Author> findByPhone(String phone);
 
-    @RestResource(path="state")
+    @RestResource(path="state",rel="by-state")
     List<Author> findByStateIgnoreCase(String state);
+
+    @RestResource(path="zip",rel="by-zip")
+    List<Author> findByZipIgnoreCase(String zip);
 
 
     

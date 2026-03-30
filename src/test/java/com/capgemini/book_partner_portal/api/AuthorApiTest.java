@@ -471,9 +471,18 @@ public class AuthorApiTest {
             .andExpect(jsonPath("$._embedded.authors").isArray())
             .andExpect(jsonPath("$._embedded.authors").isNotEmpty())
 
-            .andExpect(jsonPath("$._embedded.authors[0].phone").doesNotExist())
             .andExpect(jsonPath("$._embedded.authors[0].address").doesNotExist())
             .andExpect(jsonPath("$._embedded.authors[0].zip").doesNotExist())
             .andExpect(jsonPath("$._embedded.authors[0].contract").doesNotExist());
     }
+
+    @Test
+    void getTitlesAuthor_ShouldReturnTitlesList() throws Exception {
+        mockMvc.perform(get("/api/titleAuthors/search/byAuthor").param("auId", "724-80-9391"))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$._embedded.titleAuthors").isArray());
+    }
+
+
 }

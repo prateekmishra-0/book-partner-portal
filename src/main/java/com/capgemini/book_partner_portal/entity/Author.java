@@ -35,31 +35,41 @@ import lombok.ToString;
 public class Author {
 
     @Id
-    @Column(name = "au_id", length = 11, updatable=false)
+    @Column(name = "au_id", nullable = false, length = 11, updatable = false)
     @NotBlank(message = "Author ID is required")
-    @Pattern(regexp = "^[0-9]{3}-[0-9]{2}-[0-9]{4}$", message = "Author ID must be in format XXX-XX-XXXX")
+    @Pattern(regexp = "^[0-9]{3}-[0-9]{2}-[0-9]{4}$", message = "Author ID must match format XXX-XX-XXXX")
     private String auId;
 
-    @Column(name = "au_lname", nullable = false)
-    @NotBlank(message = "Last name is required")
-    private String lastName;
-
-    @Column(name = "au_fname", nullable = false)
+    @Column(name = "au_fname", length = 20, nullable = false)
     @NotBlank(message = "First name is required")
+    @Size(max = 20, message = "First name must not exceed 20 characters")
     private String firstName;
 
+    @Column(name = "au_lname", length = 40, nullable = false)
+    @NotBlank(message = "Last name is required")
+    @Size(max = 40, message = "Last name must not exceed 40 characters")
+    private String lastName;
+
+
+    @Column(name = "phone", length = 12, nullable = false)
+    @NotBlank(message = "Phone number is required")
+    @Size(max = 12)
     @Builder.Default
-    @Column(nullable = false, length = 12)
     private String phone = "UNKNOWN";
 
+    @Column(name = "address", length = 40)
+    @Size(max = 40)
     private String address;
+
+    @Column(name = "city", length = 20)
+    @Size(max = 20)
     private String city;
 
     @Column(length = 2)
     @Size(max = 2, message = "State must be 2 characters")
     private String state;
 
-    @Column(length = 5)
+    @Column(name = "zip", length = 5)
     @Pattern(regexp = "^[0-9]{5}$", message = "ZIP must be 5 digits")
     private String zip;
 
@@ -73,4 +83,12 @@ public class Author {
     private Boolean isActive = true;
 
 
+    // // --- LIFECYCLE HOOKS ---
+    // @PrePersist
+    // protected void onCreate() {
+    //     if (this.isActive == null) {
+    //         this.isActive = true;
+    //     }
+    // }
 }
+
