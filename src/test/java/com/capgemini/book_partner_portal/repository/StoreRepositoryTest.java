@@ -34,7 +34,6 @@ public class StoreRepositoryTest {
     void testFindAll_ShouldReturnSavedStores() {
         List<Store> stores = storeRepository.findAll();
         assertThat(stores).isNotEmpty();
-        // Kam se kam ek humara saved record check kar lete hain
         assertThat(stores).anyMatch(s -> s.getStorId().equals("9901"));
     }
 
@@ -121,4 +120,7 @@ public class StoreRepositoryTest {
         Optional<Store> deletedStore = storeRepository.findById(idToDelete);
         assertThat(deletedStore).isEmpty();
     }
+
+
+
 }

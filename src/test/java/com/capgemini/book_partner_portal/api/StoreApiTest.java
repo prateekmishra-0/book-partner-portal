@@ -298,4 +298,6 @@ public class StoreApiTest {
         mockMvc.perform(delete("/api/stores/" + ghostId))
                 .andExpect(status().isNotFound()); // GlobalExceptionHandler handles this
     }
+
+
 }
