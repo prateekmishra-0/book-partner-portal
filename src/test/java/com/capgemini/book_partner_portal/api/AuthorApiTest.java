@@ -2,6 +2,7 @@ package com.capgemini.book_partner_portal.api;
 
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsStringIgnoringCase;
 import static org.hamcrest.Matchers.everyItem;
 import org.junit.jupiter.api.BeforeEach;
@@ -367,6 +368,9 @@ public class AuthorApiTest {
                 .content(jsonWithExploit))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.isActive").doesNotExist()); // Verify field is not in response
+
+            Author saved = authorRepository.findById("111-22-3333").orElseThrow();
+            assertThat(saved.getIsActive()).isTrue();
     }
             
     // ---------------------------------- PATCH APIs Tests ----------------------------------------------
@@ -435,6 +439,15 @@ public class AuthorApiTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void deleteAuthor_WithInvalidId_ShouldReturn404() throws Exception {
+
+        String nonExistentId = "999-99-9999";
+
+        mockMvc.perform(delete("/api/authors/{id}", nonExistentId))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
 
 
     // ---------------------------------- Pagination APIs Tests ----------------------------------------------
