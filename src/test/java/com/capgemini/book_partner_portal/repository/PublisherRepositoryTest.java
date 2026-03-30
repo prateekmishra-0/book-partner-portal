@@ -1,6 +1,7 @@
 package com.capgemini.book_partner_portal.repository;
 
 import com.capgemini.book_partner_portal.entity.Publisher;
+import com.capgemini.book_partner_portal.entity.Title;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Assertions;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +32,11 @@ public class PublisherRepositoryTest {
 
     private Publisher testPublisher;
 
+    private final Title testTitle = new Title();
+
+    @Autowired
+    private TitleRepository titleRepository;
+
     @BeforeEach
     void setUpTestPublisher() {
         testPublisher = Publisher.builder()
@@ -40,6 +47,18 @@ public class PublisherRepositoryTest {
                 .country("India").build();
 
         publisherRepository.save(testPublisher);
+
+        // 3. Setup Base Title (Matching your new Repository Test data)
+        testTitle.setTitleId("BU1332");
+        testTitle.setTitle("The Good Book");
+        testTitle.setPublisher(testPublisher);
+        testTitle.setType("philosophy");
+        testTitle.setPrice(19.99);
+        testTitle.setRoyalty(10);
+        testTitle.setPubdate(LocalDateTime.now());
+        testTitle.setIsActive(true);
+        testTitle.setPubId(testPublisher.getPubId());
+        titleRepository.save(testTitle);
     }
 
 
@@ -375,5 +394,30 @@ public class PublisherRepositoryTest {
         Optional<Publisher> optionalPublisher = publisherRepository.findById(pubId);
 
         Assertions.assertTrue(optionalPublisher.isEmpty());
+    }
+
+    // find titles by publisher id
+
+    @Test
+    void shouldReturnAllTitlesByPublisherId() {
+
+        String pubId = testPublisher.getPubId();
+
+        List<Title> titles = titleRepository.findByPubId(pubId);
+
+        Assertions.assertNotNull(titles);
+        Assertions.assertEquals(1, titles.size());
+        Assertions.assertEquals(testPublisher.getPubId(), titles.get(0).getPublisher().getPubId());
+    }
+
+    @Test
+    void shouldReturnAllEmptyTitlesByPublisherId() {
+
+        String pubId = "9910"; // random
+
+        List<Title> titles = titleRepository.findByPubId(pubId);
+
+        Assertions.assertNotNull(titles);
+        Assertions.assertEquals(0, titles.size());
     }
 }

@@ -1,8 +1,11 @@
 package com.capgemini.book_partner_portal.api;
 
 import com.capgemini.book_partner_portal.entity.Publisher;
+import com.capgemini.book_partner_portal.entity.Title;
 import com.capgemini.book_partner_portal.repository.PublisherRepository;
+import com.capgemini.book_partner_portal.repository.TitleRepository;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +25,9 @@ import org.springframework.http.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @SpringBootTest
@@ -39,6 +44,11 @@ public class PublisherApiTest {
     private PublisherRepository publisherRepository;
 
     @Autowired
+    private TitleRepository titleRepository;
+
+    private final Title testTitle = new Title();
+
+    @Autowired
     private ObjectMapper objectMapper;
 
 
@@ -52,6 +62,18 @@ public class PublisherApiTest {
                 .country("India").build();
 
         publisherRepository.save(testPublisher);
+
+        // 3. Setup Base Title (Matching your new Repository Test data)
+        testTitle.setTitleId("BU1332");
+        testTitle.setTitle("The Good Book");
+        testTitle.setPublisher(testPublisher);
+        testTitle.setType("philosophy");
+        testTitle.setPrice(19.99);
+        testTitle.setRoyalty(10);
+        testTitle.setPubdate(LocalDateTime.now());
+        testTitle.setIsActive(true);
+        testTitle.setPubId(testPublisher.getPubId());
+        titleRepository.save(testTitle);
     }
 
 
@@ -270,7 +292,6 @@ public class PublisherApiTest {
      * Verifies that attempting to update a non-existent ID returns 404.
      */
 
-    // TODO : configuration should be done so that if the record is not exist put returns error
     @Test
     void shouldReturnNotFoundWhenUpdatingNonExistentId() throws Exception {
         String nonExistentId = "9900"; // Ensure this isn't in your setup
@@ -357,10 +378,33 @@ public class PublisherApiTest {
     @Test
     void shouldHideActiveFieldWhenUsingProjection() throws Exception {
         mockMvc.perform(get("/api/publishers/" + testPublisher.getPubId())
-                        .param("projection", "publisherSummary")) // Force the projection
+                        .param("projection", "publisherSummaryProjection")) // Force the projection
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.pubName").exists())
                 .andExpect(jsonPath("$.active").doesNotExist()) // Verify it's hidden
-                .andExpect(jsonPath("$.isActive").doesNotExist());
+                .andExpect(jsonPath("$.isActive").doesNotExist())
+                .andDo(print())
+        ;
+    }
+
+    @Test
+    void shouldReturnAllTitlesByPublisherId() throws Exception {
+
+        mockMvc.perform(get("/api/titles/search/publisher").param("pubId", testPublisher.getPubId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.titles").exists())
+                .andExpect(jsonPath("$._embedded.titles.length()").value(1))
+                .andExpect(jsonPath("$._embedded.titles[*].publisherName").value(testPublisher.getPubName()))
+                .andDo(print());
+    }
+
+    @Test
+    void shouldReturnAllEmptyTitlesByPublisherId() throws Exception {
+
+        mockMvc.perform(get("/api/titles/search/publisher").param("pubId", "random"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.titles").exists())
+                .andExpect(jsonPath("$._embedded.titles.length()").value(0))
+                .andDo(print());
     }
 }
