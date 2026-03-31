@@ -1,10 +1,12 @@
 package com.capgemini.book_partner_portal.repository;
 
-import com.capgemini.book_partner_portal.entity.Publisher;
-import com.capgemini.book_partner_portal.entity.Title;
-import jakarta.transaction.Transactional;
-import jakarta.validation.ConstraintViolationException;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,12 +16,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import com.capgemini.book_partner_portal.entity.Publisher;
+import com.capgemini.book_partner_portal.entity.Title;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolationException;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -28,7 +29,6 @@ public class PublisherRepositoryTest {
 
     @Autowired
     private PublisherRepository publisherRepository;
-
 
     private Publisher testPublisher;
 
@@ -60,7 +60,6 @@ public class PublisherRepositoryTest {
         testTitle.setPubId(testPublisher.getPubId());
         titleRepository.save(testTitle);
     }
-
 
     @Test
     void shouldReturnAllPublishers() {
@@ -115,53 +114,49 @@ public class PublisherRepositoryTest {
     void shouldReturnPublisherListByName() {
         String pubName = testPublisher.getPubName().substring(0, testPublisher.getPubName().length() - 2);
 
-        List<Publisher> publishers = publisherRepository.findByPubNameContainingIgnoreCase(pubName.substring(0, pubName.length() - 2));
-        assertThat(publishers).isNotEmpty();
-        for (Publisher publisher : publishers) {
+        Page<Publisher> publisherPage = publisherRepository.findByPubNameContainingIgnoreCase(pubName.substring(0, pubName.length() - 2), PageRequest.of(0, 10));
+        assertThat(publisherPage.getContent()).isNotEmpty();
+        for (Publisher publisher : publisherPage.getContent()) {
             Assertions.assertTrue(publisher.getPubName().contains(pubName));
         }
     }
-
 
     @Test
     void shouldReturnEmptyPublisherListByName() {
         String pubName = "random";
 
-        List<Publisher> publishers = publisherRepository.findByPubNameContainingIgnoreCase(pubName.toLowerCase());
+        Page<Publisher> publisherPage = publisherRepository.findByPubNameContainingIgnoreCase(pubName.toLowerCase(), PageRequest.of(0, 10));
 
-        Assertions.assertEquals(0, publishers.size());
+        Assertions.assertEquals(0, publisherPage.getContent().size());
     }
-
 
     @Test
     void shouldReturnPublisherListByCity() {
         String city = testPublisher.getCity();
 
-        List<Publisher> publishers = publisherRepository.findByCityContainingIgnoreCase(city);
-        assertThat(publishers).isNotEmpty();
-        for (Publisher publisher : publishers) {
+        Page<Publisher> publisherPage = publisherRepository.findByCityContainingIgnoreCase(city, PageRequest.of(0, 10));
+        assertThat(publisherPage.getContent()).isNotEmpty();
+        for (Publisher publisher : publisherPage.getContent()) {
             Assertions.assertTrue(publisher.getCity().contains(city));
         }
     }
-
 
     @Test
     void shouldReturnEmptyPublisherListByCity() {
         String city = "random";
 
-        List<Publisher> publishers = publisherRepository.findByCityContainingIgnoreCase(city.toLowerCase());
+        Page<Publisher> publisherPage = publisherRepository.findByCityContainingIgnoreCase(city.toLowerCase(), PageRequest.of(0, 10));
 
-        Assertions.assertEquals(0, publishers.size());
+        Assertions.assertEquals(0, publisherPage.getContent().size());
     }
-
 
     @Test
     void shouldReturnPublisherListByState() {
         String state = testPublisher.getState();
 
-        List<Publisher> publishers = publisherRepository.findByStateContainingIgnoreCase(state.toLowerCase());
-        assertThat(publishers).isNotEmpty();
-        for (Publisher publisher : publishers) {
+        Page<Publisher> publisherPage = publisherRepository.findByStateContainingIgnoreCase(state.toLowerCase(), PageRequest.of(0, 10));
+        assertThat(publisherPage.getContent()).isNotEmpty();
+        for (Publisher publisher : publisherPage.getContent()) {
             Assertions.assertTrue(publisher.getState().contains(state));
         }
     }
@@ -170,19 +165,19 @@ public class PublisherRepositoryTest {
     void shouldReturnEmptyPublisherListByState() {
         String state = "random";
 
-        List<Publisher> publishers = publisherRepository.findByStateContainingIgnoreCase(state);
+        Page<Publisher> publisherPage = publisherRepository.findByStateContainingIgnoreCase(state, PageRequest.of(0, 10));
 
-        Assertions.assertEquals(0, publishers.size());
+        Assertions.assertEquals(0, publisherPage.getContent().size());
     }
 
     @Test
     void shouldReturnPublisherListByCountry() {
         String country = testPublisher.getCountry();
 
-        List<Publisher> publishers = publisherRepository.findByCountryContainingIgnoreCase(country.toLowerCase());
-        Assertions.assertNotNull(publishers);
-        Assertions.assertFalse(publishers.isEmpty());
-        for (Publisher publisher : publishers) {
+        Page<Publisher> publisherPage = publisherRepository.findByCountryContainingIgnoreCase(country.toLowerCase(), PageRequest.of(0, 10));
+        Assertions.assertNotNull(publisherPage);
+        Assertions.assertFalse(publisherPage.getContent().isEmpty());
+        for (Publisher publisher : publisherPage.getContent()) {
             Assertions.assertTrue(publisher.getCountry().contains(country));
         }
     }
@@ -191,9 +186,9 @@ public class PublisherRepositoryTest {
     void shouldReturnEmptyPublisherListByCountry() {
         String country = "random";
 
-        List<Publisher> publishers = publisherRepository.findByCountryContainingIgnoreCase(country);
-        Assertions.assertNotNull(publishers);
-        Assertions.assertEquals(0, publishers.size());
+        Page<Publisher> publisherPage = publisherRepository.findByCountryContainingIgnoreCase(country, PageRequest.of(0, 10));
+        Assertions.assertNotNull(publisherPage);
+        Assertions.assertEquals(0, publisherPage.getContent().size());
     }
 
     // save
@@ -231,13 +226,11 @@ public class PublisherRepositoryTest {
         Assertions.assertEquals(countAfterFirstSave, countAfterSecondSave, "Count should not increase for duplicate ID");
     }
 
-
     // update the existing record
     @Test
     void shouldUpdateExistingRecord() {
 
         // we have inserted test record in before each now updating that record
-
         testPublisher.setPubName("random_name");
 
         publisherRepository.save(testPublisher);
@@ -261,13 +254,11 @@ public class PublisherRepositoryTest {
                 .country("India")
                 .build();
 
-
         // We use saveAndFlush to force Hibernate to validate the entity NOW
         assertThrows(ConstraintViolationException.class, () -> {
             publisherRepository.saveAndFlush(publisher);
         });
     }
-
 
     @Test
     void shouldThrowErrorWhileSavingPublisherStateConstraintVoileted() {
@@ -287,9 +278,8 @@ public class PublisherRepositoryTest {
     }
 
     /**
-     * TEST: Ensure default value is applied
-     * Verifies that when a Publisher is saved without a country,
-     * it defaults to "USA".
+     * TEST: Ensure default value is applied Verifies that when a Publisher is
+     * saved without a country, it defaults to "USA".
      */
     @Test
     void shouldApplyDefaultCountryWhenNotProvided() {
@@ -305,9 +295,8 @@ public class PublisherRepositoryTest {
     }
 
     /**
-     * TEST: Verify partial update logic
-     * Simulates the behavior of a PATCH request by retrieving,
-     * modifying one field, and re-saving.
+     * TEST: Verify partial update logic Simulates the behavior of a PATCH
+     * request by retrieving, modifying one field, and re-saving.
      */
     @Test
     void shouldOnlyUpdateProvidedField() {
@@ -326,8 +315,8 @@ public class PublisherRepositoryTest {
     }
 
     /**
-     * TEST: Invalid ID pattern (Constraint Violation)
-     * Checks that an ID like '1234' (which fails the regex) triggers an exception.
+     * TEST: Invalid ID pattern (Constraint Violation) Checks that an ID like
+     * '1234' (which fails the regex) triggers an exception.
      */
     @Test
     void shouldThrowExceptionWhenIdFormatIsInvalid() {
@@ -343,8 +332,8 @@ public class PublisherRepositoryTest {
     }
 
     /**
-     * TEST: @NotBlank constraint
-     * Verifies that the repository won't allow saving a publisher without a name.
+     * TEST: @NotBlank constraint Verifies that the repository won't allow
+     * saving a publisher without a name.
      */
     @Test
     void shouldThrowExceptionWhenNameIsBlank() {
@@ -360,8 +349,8 @@ public class PublisherRepositoryTest {
     }
 
     /**
-     * REPOSITORY TEST: Find All Pagination
-     * Verifies that the database correctly slices the data into pages.
+     * REPOSITORY TEST: Find All Pagination Verifies that the database correctly
+     * slices the data into pages.
      */
     @Test
     void shouldReturnCorrectPageSliceForFindAll() {
@@ -383,7 +372,6 @@ public class PublisherRepositoryTest {
     }
 
     // for delete
-
     @Test
     void shouldDeletePublisherById() {
 
@@ -397,13 +385,12 @@ public class PublisherRepositoryTest {
     }
 
     // find titles by publisher id
-
     @Test
     void shouldReturnAllTitlesByPublisherId() {
 
         String pubId = testPublisher.getPubId();
 
-        Page<Title> titles = titleRepository.findByPubId(pubId,PageRequest.of(0,5));
+        Page<Title> titles = titleRepository.findByPubId(pubId, PageRequest.of(0, 5));
 
         Assertions.assertNotNull(titles);
         Assertions.assertEquals(1, titles.getNumberOfElements());
@@ -415,7 +402,7 @@ public class PublisherRepositoryTest {
 
         String pubId = "9910"; // random
 
-        Page<Title> titles = titleRepository.findByPubId(pubId,PageRequest.of(0,5));
+        Page<Title> titles = titleRepository.findByPubId(pubId, PageRequest.of(0, 5));
 
         Assertions.assertNotNull(titles);
         Assertions.assertEquals(0, titles.getNumberOfElements());

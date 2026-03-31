@@ -122,7 +122,7 @@ public class PublisherApiTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/hal+json"))
-                .andExpect(jsonPath("$._embedded.publishers").isEmpty());
+                .andExpect(jsonPath("$.page.totalElements").value(0));
     }
 
     // searching by city
@@ -142,7 +142,7 @@ public class PublisherApiTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/hal+json"))
-                .andExpect(jsonPath("$._embedded.publishers").isEmpty());
+                .andExpect(jsonPath("$.page.totalElements").value(0));
     }
 
     // searching by State
@@ -162,7 +162,7 @@ public class PublisherApiTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/hal+json"))
-                .andExpect(jsonPath("$._embedded.publishers").isEmpty());
+                .andExpect(jsonPath("$.page.totalElements").value(0));
     }
 
     // searching by country
@@ -182,7 +182,7 @@ public class PublisherApiTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/hal+json"))
-                .andExpect(jsonPath("$._embedded.publishers").isEmpty());
+                .andExpect(jsonPath("$.page.totalElements").value(0));
     }
 
     @Test
@@ -390,21 +390,27 @@ public class PublisherApiTest {
     @Test
     void shouldReturnAllTitlesByPublisherId() throws Exception {
 
-        mockMvc.perform(get("/api/titles/search/publisher").param("pubId", testPublisher.getPubId()))
+        mockMvc.perform(get("/api/titles/search/publisher")
+                        .param("pubId", testPublisher.getPubId())
+                        .param("page", "0")
+                        .param("size", "5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._embedded.titles").exists())
                 .andExpect(jsonPath("$._embedded.titles.length()").value(1))
                 .andExpect(jsonPath("$._embedded.titles[*].publisherName").value(testPublisher.getPubName()))
+                .andExpect(jsonPath("$.page.totalElements").value(1))
                 .andDo(print());
     }
 
     @Test
     void shouldReturnAllEmptyTitlesByPublisherId() throws Exception {
 
-        mockMvc.perform(get("/api/titles/search/publisher").param("pubId", "random"))
+        mockMvc.perform(get("/api/titles/search/publisher")
+                        .param("pubId", "random")
+                        .param("page", "0")
+                        .param("size", "5"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$._embedded.titles").exists())
-                .andExpect(jsonPath("$._embedded.titles.length()").value(0))
+                .andExpect(jsonPath("$.page.totalElements").value(0))
                 .andDo(print());
     }
 }
