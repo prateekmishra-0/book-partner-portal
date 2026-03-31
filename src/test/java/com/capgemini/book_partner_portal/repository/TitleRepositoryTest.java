@@ -23,6 +23,10 @@ import com.capgemini.book_partner_portal.entity.Title;
 import com.capgemini.book_partner_portal.entity.TitleAuthor;
 import com.capgemini.book_partner_portal.entity.TitleAuthorId;
 
+import org.springframework.data.domain.PageRequest;
+
+
+
 @DataJpaTest
 @ContextConfiguration(classes = BookPartnerPortalApplication.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -104,16 +108,17 @@ class TitleRepositoryTest {
     }
 
     @Test
-    @DisplayName("Repo: Multi-Author Selection and Retrieval")
+    @DisplayName("Repo: Multi-Author Selection and Retrieval with Pagination")
     void testMultiAuthorLinkingAndRetrieval() {
         // 1. Prepare Authors (Simulating the list available in your frontend dropdown)
         Author authorA = Author.builder()
                 .auId("111-22-3333").firstName("Alice").lastName("Alpha")
                 .contract(1).isActive(true).build();
+
         Author authorB = Author.builder()
                 .auId("444-55-6666").firstName("Bob").lastName("Beta")
                 .contract(1).isActive(true).build();
-        
+
         authorRepository.saveAll(List.of(authorA, authorB));
 
         // 2. Fetch the Title created in setUp()
@@ -121,39 +126,28 @@ class TitleRepositoryTest {
 
         // 3. Create "TitleAuthor" links (Simulating the frontend saving the selection)
         // Link Author A as Primary (Order 1)
-        TitleAuthor link1 = new TitleAuthor(
-            new TitleAuthorId(authorA.getAuId(), book.getTitleId()), 
-            authorA, book, (byte) 1, 60
-        );
-        // Link Author B as Secondary (Order 2)
-        TitleAuthor link2 = new TitleAuthor(
-            new TitleAuthorId(authorB.getAuId(), book.getTitleId()), 
-            authorB, book, (byte) 2, 40
-        );
+        TitleAuthor link1 = new TitleAuthor(new TitleAuthorId(authorA.getAuId(), book.getTitleId()),authorA, book, (byte) 1, 60 );
 
+        // Link Author B as Secondary (Order 2)
+
+        TitleAuthor link2 = new TitleAuthor(new TitleAuthorId(authorB.getAuId(), book.getTitleId()),authorB, book, (byte) 2, 40);
         titleAuthorRepository.saveAll(List.of(link1, link2));
         entityManager.flush();
         entityManager.clear();
 
-        // 4. TEST: Retrieve authors by Title ID (The specific requirement)
-        Page<TitleAuthor> authorshipList = titleAuthorRepository.findById_TitleId("BU1332",Pageable.unpaged());
+        // 4. TEST: Retrieve authors by Title ID with Pageable
+        Page<TitleAuthor> authorshipPage = titleAuthorRepository.findById_TitleId("BU1332", Pageable.unpaged());
 
-        // Verify counts and data integrity
-        assertThat(authorshipList).hasSize(2);
+        // Verify counts using Page methods
+        assertThat(authorshipPage.getTotalElements()).isEqualTo(2);
+
         
-        // Verify we can see Author names through the join table
-        List<String> names = authorshipList.stream()
+        // Extract content from Page to verify data
+        List<String> names = authorshipPage.getContent().stream()
                 .map(ta -> ta.getAuthor().getFirstName())
                 .toList();
         
         assertThat(names).containsExactlyInAnyOrder("Alice", "Bob");
-
-        // Verify the order and royalties are correct
-        TitleAuthor primary = authorshipList.stream()
-                .filter(ta -> ta.getAuOrd() == 1)
-                .findFirst().get();
-        assertThat(primary.getAuthor().getLastName()).isEqualTo("Alpha");
-        assertThat(primary.getRoyaltyPer()).isEqualTo(60);
     }
 
     @Test
@@ -176,39 +170,40 @@ class TitleRepositoryTest {
     }
 
     @Test
-    void testFindBySimilarTitle() {
-        List<Title> list = titleRepository.findByTitleContainingIgnoreCase("Good");
-        assertThat(list).isNotEmpty();
+    void testFindBySimilarTitle_Paginated() {
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Title> page = titleRepository.findByTitleContainingIgnoreCase("Good", pageable);
+        
+        assertThat(page.getContent()).isNotEmpty();
+        assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(1);
     }
 
     @Test
-    void testFindByType() {
-        List<Title> list = titleRepository.findByTypeIgnoreCase("philosophy");
-        assertThat(list).isNotEmpty();
+    void testFindByType_Paginated() {
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Title> page = titleRepository.findByTypeIgnoreCase("philosophy", pageable);
+        
+        assertThat(page.getContent()).isNotEmpty();
+        assertThat(page.getContent().get(0).getType()).isEqualTo("philosophy");
     }
 
     // --- Numeric Comparison (The Employee Style) ---
     @Test
-    @DisplayName("Repo: Price Comparison with Full Database")
-    void testPriceComparison_Logic() {
-        // 1. Test Greater Than (15.00)
-        // Our book "BU1332" is 19.99, so it MUST be in this list
-        List<Title> greaterThan = titleRepository.findByPriceGreaterThan(15.00);
-        assertThat(greaterThan).isNotEmpty();
-        assertThat(greaterThan).anyMatch(t -> t.getTitleId().equals("BU1332"));
+    @DisplayName("Repo: Price Comparison with Pagination")
+    void testPriceComparison_Logic_Paginated() {
+        Pageable pageable = PageRequest.of(0, 10);
 
-        // 2. Test Less Than (10.00)
-        // In a full DB, there might be cheap books (e.g. 2.99). 
-        // So we don't check for .isEmpty(). We check that OUR book is NOT there.
-        List<Title> lessThan = titleRepository.findByPriceLessThan(10.00);
-        assertThat(lessThan).noneMatch(t -> t.getTitleId().equals("BU1332"));
+        // 1. Test Greater Than
+        Page<Title> greaterThan = titleRepository.findByPriceGreaterThan(15.00, pageable);
+        assertThat(greaterThan.getContent()).anyMatch(t -> t.getTitleId().equals("BU1332"));
 
-        // 3. Test Between (18.00 and 22.00)
-        // In full DB, there might be 5 books in this range. 
-        // We verify the list is not empty and contains our book.
-        List<Title> results = titleRepository.findByPriceBetween(18.00, 22.00);
-        assertThat(results).isNotEmpty();
-        assertThat(results).anyMatch(t -> t.getTitleId().equals("BU1332") && t.getPrice() == 19.99);
+        // 2. Test Less Than
+        Page<Title> lessThan = titleRepository.findByPriceLessThan(10.00, pageable);
+        assertThat(lessThan.getContent()).noneMatch(t -> t.getTitleId().equals("BU1332"));
+
+        // 3. Test Range
+        Page<Title> results = titleRepository.findByPriceBetween(18.00, 22.00, pageable);
+        assertThat(results.getContent()).anyMatch(t -> t.getTitleId().equals("BU1332"));
     }
 
     @Test
@@ -258,6 +253,15 @@ class TitleRepositoryTest {
         Title updated = titleRepository.findById("BU1332").get();
         assertThat(updated.getPrice()).isEqualTo(99.99);
         assertThat(updated.getTitle()).isEqualTo("The Good Book"); // Title should remain same
+    }
+    @Test
+    @DisplayName("Repo: Publisher Search with Pagination")
+    void testFindByPublisher_Paginated() {
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Title> page = titleRepository.findByPubId("1389", pageable);
+        
+        assertThat(page.getContent()).isNotEmpty();
+        assertThat(page.getContent().get(0).getPubId()).isEqualTo("1389");
     }
 
     

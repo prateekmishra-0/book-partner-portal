@@ -87,12 +87,16 @@ class TitleApiTest {
     }
 
     @Test
-    @DisplayName("API: Fetch All Titles")
+    @DisplayName("API: Fetch All Titles (Paginated)")
     void testFetchMasterBookList() throws Exception {
-        mockMvc.perform(get("/api/titles"))
-                .andDo(print())
+        mockMvc.perform(get("/api/titles")
+                .param("size", "5")
+                .param("page", "0"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$._embedded.titles", hasSize(greaterThanOrEqualTo(1))));
+                .andExpect(jsonPath("$._embedded.titles", hasSize(greaterThanOrEqualTo(1))))
+                // Verify pagination metadata exists
+                .andExpect(jsonPath("$.page.size", is(5)))
+                .andExpect(jsonPath("$.page.totalElements").exists());
     }
 
     @Test
@@ -130,23 +134,26 @@ class TitleApiTest {
     }
 
     @Test
-    @DisplayName("API: Search by Type (philosophy)")
+    @DisplayName("API: Search by Type (philosophy) - Paginated")
     void testFindByType() throws Exception { 
         mockMvc.perform(get("/api/titles/search/type")
-                .param("type", "PHILOSOPHY") 
+                .param("type", "philosophy") 
                 .accept("application/hal+json")) 
                 .andExpect(status().isOk()) 
-                .andExpect(jsonPath("$._embedded.titles[0].type", is("philosophy")));
+                // Results are inside _embedded when paginated
+                .andExpect(jsonPath("$._embedded.titles[0].type", is("philosophy")))
+                .andExpect(jsonPath("$.page").exists());
     }
 
-    @Test
-    @DisplayName("API: Search Price Greater Than")
+   @Test
+    @DisplayName("API: Search Price Greater Than - Paginated")
     void testFindByPriceGreaterThan() throws Exception {
        mockMvc.perform(get("/api/titles/search/price-gt")
-               .param("price", "15.00") // Matches @Param("price") in Repo
+               .param("price", "15.00")
                .accept("application/hal+json"))
                .andExpect(status().isOk())
-               .andExpect(jsonPath("$._embedded.titles").exists());
+               .andExpect(jsonPath("$._embedded.titles").exists())
+               .andExpect(jsonPath("$.page.totalElements", greaterThanOrEqualTo(1)));
     }
 
     @Test
@@ -164,15 +171,17 @@ class TitleApiTest {
     @DisplayName("API: POST New Book")
     void testAddNewBook() throws Exception {
         String id = "PC9999";
-        String newBookJson = "{" +
-                "\"titleId\": \"" + id + "\"," +
-                "\"title\": \"Post Method Guide\"," + 
-                "\"type\": \"business\"," +
-                "\"publisher\": \"/api/publishers/1389\"," +
-                "\"price\": 50.00," +
-                "\"pubdate\": \"2026-03-27T10:00:00\"," +
-                "\"active\": true" +
-                "}";
+        String newBookJson = """
+            {
+                "titleId": "PC9999",
+                "title": "Post Method Guide",
+                "type": "business",
+                "publisher": "/api/publishers/1389",
+                "price": 50.00,
+                "pubdate": "2026-03-27T10:00:00",
+                "isActive": true
+            }
+            """;
 
         mockMvc.perform(post("/api/titles") 
                 .contentType(MediaType.APPLICATION_JSON)
@@ -325,16 +334,17 @@ class TitleApiTest {
                 .andExpect(status().isNotFound());
     }
 
-    @Test
-    @DisplayName("API: POST with isActive:false is ignored and defaults to true")
+   @Test
+    @DisplayName("Security: POST with isActive=false should be forced to true")
     void testIsActiveShield() throws Exception {
+        String id = "SHLD01";
         String payload = """
             {
                 "titleId": "SHLD01",
                 "title": "Protected Book",
                 "type": "tech",
                 "isActive": false,
-                "pubId": "1389"
+                "publisher": "/api/publishers/1389"
             }
             """;
 
@@ -343,9 +353,9 @@ class TitleApiTest {
                 .content(payload))
                 .andExpect(status().isCreated());
 
-        // Verify it is active in the DB despite the payload
-        mockMvc.perform(get("/api/titles/SHLD01"))
-                .andExpect(status().isOk()); 
+        // Check if EventHandler forced it to true
+        Optional<Title> saved = titleRepository.findById(id);
+        assertThat(saved.get().getIsActive()).isTrue();
     }
 
     @Test
@@ -384,12 +394,15 @@ class TitleApiTest {
     @Test
     @DisplayName("API: Composite Key correctly addresses resource")
     void testCompositeKeyAddressing() throws Exception {
-        // Format for composite key in Spring Data REST is {auId},{titleId}
+        // Default Spring Data REST format is auId,titleId (COMMA)
+        // If your TitleAuthorIdConverter uses underscore, keep it. 
+        // Otherwise, change to ","
         String compositeId = "111-11-1111_BU1332"; 
         
         mockMvc.perform(get("/api/titleAuthors/" + compositeId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.royaltyPer").exists());
+                .andExpect(jsonPath("$.royaltyPer").exists())
+                .andExpect(jsonPath("$._links.author").exists());
     }
 
 

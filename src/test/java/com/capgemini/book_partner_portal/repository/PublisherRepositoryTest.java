@@ -403,11 +403,11 @@ public class PublisherRepositoryTest {
 
         String pubId = testPublisher.getPubId();
 
-        List<Title> titles = titleRepository.findByPubId(pubId);
+        Page<Title> titles = titleRepository.findByPubId(pubId,PageRequest.of(0,5));
 
         Assertions.assertNotNull(titles);
-        Assertions.assertEquals(1, titles.size());
-        Assertions.assertEquals(testPublisher.getPubId(), titles.get(0).getPublisher().getPubId());
+        Assertions.assertEquals(1, titles.getNumberOfElements());
+        Assertions.assertEquals(testPublisher.getPubId(), titles.getContent().get(0).getPublisher().getPubId());
     }
 
     @Test
@@ -415,9 +415,9 @@ public class PublisherRepositoryTest {
 
         String pubId = "9910"; // random
 
-        List<Title> titles = titleRepository.findByPubId(pubId);
+        Page<Title> titles = titleRepository.findByPubId(pubId,PageRequest.of(0,5));
 
         Assertions.assertNotNull(titles);
-        Assertions.assertEquals(0, titles.size());
+        Assertions.assertEquals(0, titles.getNumberOfElements());
     }
 }
