@@ -1,7 +1,7 @@
 package com.capgemini.book_partner_portal.repository;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
@@ -27,12 +27,12 @@ public interface TitleAuthorRepository extends JpaRepository<TitleAuthor, TitleA
      * Spring Data translates the "_" to navigate inside the @EmbeddedId.
      */
     @RestResource(path = "byTitle", rel = "by-title")
-    List<TitleAuthor> findById_TitleId(@Param("titleId") String titleId);
+    Page<TitleAuthor> findById_TitleId(@Param("titleId") String titleId,Pageable pageable);
 
     /**
      * For Dev 2: Gets all books linked to a specific author.
      * Endpoint: GET /api/titleAuthors/search/byAuthor?auId=172-32-1176
      */
     @RestResource(path = "byAuthor", rel = "by-author")
-    List<TitleAuthor> findById_AuId(@Param("auId") String auId);
+    Page<TitleAuthor> findById_AuId(@Param("auId") String auId,Pageable pageable);
 }

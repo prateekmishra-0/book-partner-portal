@@ -1,6 +1,6 @@
 package com.capgemini.book_partner_portal.repository;
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.rest.core.annotation.RestResource;
@@ -13,22 +13,22 @@ import com.capgemini.book_partner_portal.projection.AuthorListProjection;
 public interface AuthorRepository extends JpaRepository<Author, String> {
 
     @RestResource(path="firstname",rel="by-firstname")
-    List<Author> findByFirstNameContainingIgnoreCase(String firstName);
+    Page<Author> findByFirstNameContainingIgnoreCase(String firstName,Pageable pageable);
     
     @RestResource(path="lastname",rel="by-lastname")
-    List<Author> findByLastNameContainingIgnoreCase(String lastName);
+    Page<Author> findByLastNameContainingIgnoreCase(String lastName,Pageable pageable);
 
     @RestResource(path="city",rel="by-city")
-    List<Author> findByCityIgnoreCase(String city);
+    Page<Author> findByCityStartingWithIgnoreCase(String city,Pageable pageable);
 
     @RestResource(path="phone",rel="by-phone")
-    List<Author> findByPhone(String phone);
+    Page<Author> findByPhoneStartingWith(String phone,Pageable pageable);
 
     @RestResource(path="state",rel="by-state")
-    List<Author> findByStateIgnoreCase(String state);
+    Page<Author> findByStateStartingWithIgnoreCase(String state,Pageable pageable);
 
     @RestResource(path="zip",rel="by-zip")
-    List<Author> findByZipIgnoreCase(String zip);
+    Page<Author> findByZipStartingWithIgnoreCase(String zip,Pageable pageable);
 
 
     

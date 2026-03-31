@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.capgemini.book_partner_portal.entity.Author;
 import com.capgemini.book_partner_portal.entity.TitleAuthor;
@@ -76,32 +78,32 @@ public class AuthorRepositoryTest {
     // find author when first name exists
     @Test
     void findByName_WhenFirstNameExists_ShouldReturnNonEmptyList(){
-        List<Author> authors = authorRepository
-        .findByFirstNameContainingIgnoreCase("John");
+        Page<Author> authors = authorRepository
+        .findByFirstNameContainingIgnoreCase("John",Pageable.unpaged());
         assertThat(authors).isNotEmpty();
     }
 
     // find author when first name not exists
     @Test
     void findByFirstName_WhenFirstNameNotExists_ShouldReturnEmptyList(){
-        List<Author> authors = authorRepository
-        .findByFirstNameContainingIgnoreCase("Ramesh");
+        Page<Author> authors = authorRepository
+        .findByFirstNameContainingIgnoreCase("Ramesh",Pageable.unpaged());
         assertThat(authors).isEmpty();
     }
 
     // find author when last name exists
     @Test
     void findByName_WhenLastNameExists_ShouldReturnNonEmptyList(){
-        List<Author> authors = authorRepository
-        .findByLastNameContainingIgnoreCase("Doe");
+        Page<Author> authors = authorRepository
+        .findByLastNameContainingIgnoreCase("Doe",Pageable.unpaged());
         assertThat(authors).isNotEmpty();
     }
 
     // find author when last name not exists
     @Test
     void findByLastName_WhenLastNameNotExists_ShouldReturnEmptyList(){
-        List<Author> authors = authorRepository
-        .findByLastNameContainingIgnoreCase("Sharma");
+        Page<Author> authors = authorRepository
+        .findByLastNameContainingIgnoreCase("Sharma",Pageable.unpaged());
         assertThat(authors).isEmpty();
     }
 
@@ -109,14 +111,14 @@ public class AuthorRepositoryTest {
     // find author when city exists
     @Test 
     void findByCity_WhenCityExists_ShouldReturnNonEmptyList(){
-        List<Author> authors = authorRepository.findByCityIgnoreCase("Berkeley");
+        Page<Author> authors = authorRepository.findByCityStartingWithIgnoreCase("Berkeley",Pageable.unpaged());
         assertThat(authors).isNotEmpty();
     }
 
     // find author when city not exists
     @Test 
     void findByCity_WhenCityNotExists_ShouldReturnEmptyList(){
-        List<Author> authors = authorRepository.findByCityIgnoreCase("Gondia");
+        Page<Author> authors = authorRepository.findByCityStartingWithIgnoreCase("Gondia",Pageable.unpaged());
         assertThat(authors).isEmpty();
     }
 
@@ -124,28 +126,28 @@ public class AuthorRepositoryTest {
     // find author when state exists
     @Test 
     void findByState_WhenStateExists_ShouldReturnNonEmptyList(){
-        List<Author> authors = authorRepository.findByStateIgnoreCase("CA");
+        Page<Author> authors = authorRepository.findByStateStartingWithIgnoreCase("CA",Pageable.unpaged());
         assertThat(authors).isNotEmpty();
     }
 
     //find author when state not exists
     @Test 
     void findByState_WhenStateNotExists_ShouldReturnEmptyList(){
-        List<Author> authors = authorRepository.findByStateIgnoreCase("Maharashtra");
+        Page<Author> authors = authorRepository.findByStateStartingWithIgnoreCase("Maharashtra",Pageable.unpaged());
         assertThat(authors).isEmpty();
     }
 
     //find author when phone exists
     @Test 
     void findByPhone_WhenPhoneExists_ShouldReturnNonEmptyList(){
-        List<Author> authors = authorRepository.findByPhone("415 658-9932");
+        Page<Author> authors = authorRepository.findByPhoneStartingWith("415 658-9932",Pageable.unpaged());
         assertThat(authors).isNotEmpty();
     }
 
     // find author when phone not exists
     @Test 
     void findByPhone_WhenPhoneNotExists_ShouldReturnEmptyList(){
-        List<Author> authors = authorRepository.findByPhone("999 999-9999");
+        Page<Author> authors = authorRepository.findByPhoneStartingWith("999 999-9999",Pageable.unpaged());
         assertThat(authors).isEmpty();
     }
 
@@ -259,7 +261,7 @@ public class AuthorRepositoryTest {
         String auId = "267-41-2394"; 
         
         // Act
-        List<TitleAuthor> titles = titleAuthorRepository.findById_AuId(auId);
+        Page<TitleAuthor> titles = titleAuthorRepository.findById_AuId(auId,Pageable.unpaged());
         
         // Assert
         assertThat(titles).isNotEmpty();

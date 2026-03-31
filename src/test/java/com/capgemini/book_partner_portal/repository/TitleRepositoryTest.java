@@ -1,12 +1,10 @@
 package com.capgemini.book_partner_portal.repository;
 
-import com.capgemini.book_partner_portal.BookPartnerPortalApplication;
-import com.capgemini.book_partner_portal.entity.Author;
-import com.capgemini.book_partner_portal.entity.Publisher;
-import com.capgemini.book_partner_portal.entity.Title;
-import com.capgemini.book_partner_portal.entity.TitleAuthor;
-import com.capgemini.book_partner_portal.entity.TitleAuthorId;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,13 +12,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ContextConfiguration;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import com.capgemini.book_partner_portal.BookPartnerPortalApplication;
+import com.capgemini.book_partner_portal.entity.Author;
+import com.capgemini.book_partner_portal.entity.Publisher;
+import com.capgemini.book_partner_portal.entity.Title;
+import com.capgemini.book_partner_portal.entity.TitleAuthor;
+import com.capgemini.book_partner_portal.entity.TitleAuthorId;
 
 @DataJpaTest
 @ContextConfiguration(classes = BookPartnerPortalApplication.class)
@@ -135,7 +136,7 @@ class TitleRepositoryTest {
         entityManager.clear();
 
         // 4. TEST: Retrieve authors by Title ID (The specific requirement)
-        List<TitleAuthor> authorshipList = titleAuthorRepository.findById_TitleId("BU1332");
+        Page<TitleAuthor> authorshipList = titleAuthorRepository.findById_TitleId("BU1332",Pageable.unpaged());
 
         // Verify counts and data integrity
         assertThat(authorshipList).hasSize(2);
