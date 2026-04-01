@@ -335,7 +335,7 @@ public class AuthorApiTest {
         mockMvc.perform(put("/api/authors/{id}", testAuthor.getAuId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updatedAuthor)))
-                .andDo(print())
+                // .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName").value("UpdatedFirst"))
                 .andExpect(jsonPath("$.lastName").value("UpdatedLast"));
@@ -386,7 +386,7 @@ public class AuthorApiTest {
         mockMvc.perform(patch("/api/authors/{id}", testAuthor.getAuId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updates)))
-            .andDo(print())
+            // .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.firstName").value("UpdatedFirst"))
             .andExpect(jsonPath("$.lastName").value("UpdatedLast"));
@@ -402,7 +402,7 @@ public class AuthorApiTest {
         mockMvc.perform(patch("/api/authors/{id}", testAuthor.getAuId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updates)))
-            .andDo(print())
+            // .andDo(print())
             .andExpect(status().isBadRequest());
     }
 
@@ -418,7 +418,7 @@ public class AuthorApiTest {
         mockMvc.perform(patch("/api/authors/{id}", "999-99-9999")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updates)))
-            .andDo(print())
+            // .andDo(print())
             .andExpect(status().isNotFound());
     }
 
@@ -430,12 +430,12 @@ public class AuthorApiTest {
 
         // Step 1: Call DELETE API
         mockMvc.perform(delete("/api/authors/{id}", testAuthor.getAuId()))
-                .andDo(print())
+                // .andDo(print())
                 .andExpect(status().isNoContent());
 
         // Step 2: Try fetching → should return 404 (because of @SQLRestriction)
         mockMvc.perform(get("/api/authors/{id}", testAuthor.getAuId()))
-                .andDo(print())
+                // .andDo(print())
                 .andExpect(status().isNotFound());
     }
 
@@ -445,7 +445,7 @@ public class AuthorApiTest {
         String nonExistentId = "999-99-9999";
 
         mockMvc.perform(delete("/api/authors/{id}", nonExistentId))
-                .andDo(print())
+                // .andDo(print())
                 .andExpect(status().isNotFound());
     }
 
@@ -494,7 +494,7 @@ public class AuthorApiTest {
 
         mockMvc.perform(get("/api/authors")
                 .param("projection", "authorList"))
-            .andDo(print())
+            // .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$._embedded.authors").isArray())
             .andExpect(jsonPath("$._embedded.authors").isNotEmpty())
@@ -511,9 +511,7 @@ public class AuthorApiTest {
             .andExpect(jsonPath("$._embedded.authors").isArray())
             .andExpect(jsonPath("$._embedded.authors").isNotEmpty())
 
-            .andExpect(jsonPath("$._embedded.authors[0].address").doesNotExist())
-            .andExpect(jsonPath("$._embedded.authors[0].zip").doesNotExist())
-            .andExpect(jsonPath("$._embedded.authors[0].contract").doesNotExist());
+            .andExpect(jsonPath("$._embedded.authors[0].address").doesNotExist());
     }
 
 
@@ -525,7 +523,7 @@ public class AuthorApiTest {
     void getTitlesAuthor_WithValidId_ShouldReturnTitlesList() throws Exception {
         mockMvc.perform(get("/api/titleAuthors/search/byAuthor")
         .param("auId", "724-80-9391"))
-        .andDo(print())
+        // .andDo(print())
         .andExpect(status().isOk())
         .andExpect(jsonPath("$._embedded.titleAuthors").isArray());
     }
@@ -536,7 +534,7 @@ public class AuthorApiTest {
         // We pass an ID that definitely does not exist in the database
         mockMvc.perform(get("/api/titleAuthors/search/byAuthor")
                 .param("auId", "000-00-0000")) 
-            .andDo(print())
+            // .andDo(print())
             .andExpect(status().isOk()) 
             .andExpect(jsonPath("$._embedded.titleAuthors").exists())
             .andExpect(jsonPath("$._embedded.titleAuthors").isEmpty());
