@@ -153,7 +153,7 @@ public class AuthorApiTest {
     @Test
     void getAuthorsByCity_WhenCityNotExists_ShouldReturnEmptyList() throws Exception {
         mockMvc.perform(get("/api/authors/search/city")
-            .param("city", "Gondia"))
+            .param("city", "Deori"))
             // .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$._embedded.authors").exists())
