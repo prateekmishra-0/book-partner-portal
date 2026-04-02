@@ -5,6 +5,7 @@ import com.capgemini.book_partner_portal.projection.TitleSummaryProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.rest.core.annotation.RestResource;
@@ -59,4 +60,8 @@ public interface TitleRepository extends JpaRepository<Title, String> {
      */
     @RestResource(path = "publisher", rel = "by-publisher")
     Page<Title> findByPubId(@Param("pubId") String pubId, Pageable pageable);
+
+    @Override
+    @Query("SELECT t FROM Title t WHERE t.isActive = true")
+    Page<Title> findAll(Pageable pageable);
 }

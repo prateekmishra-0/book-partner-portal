@@ -75,7 +75,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @SQLDelete(sql = "UPDATE titles SET is_active = false WHERE title_id = ?")
-@SQLRestriction("is_active = true")
+//@SQLRestriction("is_active = true")
 public class Title {
 
     /**
