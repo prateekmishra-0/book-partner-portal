@@ -196,7 +196,7 @@ HTTP POST /api/authors { JSON body }
 
 | Layer | Technology |
 |---|---|
-| Language | Java 11 (Streams, Lambdas, NIO.2) |
+| Language | Java 17 (Streams, Lambdas, NIO.2) |
 | Framework | Spring Boot, Spring Data REST, Spring Security |
 | ORM | Spring Data JPA / Hibernate |
 | Database | MySQL 8.0 |
